@@ -2175,7 +2175,7 @@ while (iter != vi.end())
     }
 ```
 ### 9.4 vector对象是如何增长的
-考虑向vector或string中添加元素会发生什么:如果没有空间容纳新元素，容器不可能简单地将它添加到内存中其他位置一因 为元素必须连续存储。容器必须分配新的内存空间来保存已有元素和新元素，将已有元素从旧位置移动到新空间中，然后添加新元素，释放旧存储空间。如果我每添加一一个新元素，vector就执行1次这样的内存分配和释放操作，性能会慢到不可
+假定容器是连续存储的，而且大小可变，考虑向vector或string中添加元素会发生什么:如果没有空间容纳新元素，容器不可能简单地将它添加到内存中其他位置一因 为元素必须连续存储。容器必须分配新的内存空间来保存已有元素和新元素，将已有元素从旧位置移动到新空间中，然后添加新元素，释放旧存储空间。如果我每添加一一个新元素，vector就执行1次这样的内存分配和释放操作，性能会慢到不可
 接受。
 
 为了避免这种代价，标准库实现者采用了可以减少容器空间重新分配次数的策略。不得不获取新的内存空间时，vector和string的实现通常会分配比新的空间需求更大的内存空间。容器预留这些空间作为备用，可用来保存更多的新元素。这样，就不需要每次添加新元素都重新分配容器的内存空间了。
@@ -2230,6 +2230,197 @@ while (iter != vi.end())
 只有在执行insert操作时size与capacity相等，或者调用resize或reserve时给定的大小超过当前capacity,vector才可能重新分配内存空间。会分配多少超过给定容量的额外空间，取决于具体实现。
 
 虽然不同的实现可以采用不同的分配策略，但所有实现都应遵循一个原则:确保用push_ back向vector添加元素的操作有高效率。从技术角度说，就是通过在一个初始为空的vector.上调用n次push_ back来创建-一个n个元素的vector,所花费的时间不能超过n的常数倍。
+
+### 9.5 额外的string操作
+![Alt text](image-37.png)
+这些构造函数接受-一个 string或一个const char*参数，还接受(可选的)指定拷贝多少个字符的参数。当我们传递给它们的是一个 string时，还可以给定一个下标来指出从哪里开始拷贝:
+```
+const char *cp = "Hello World!! !";
+//以空字符结束的数组
+char noNull[] = {'H', ' i' };
+//不是以空字符结束
+string s1(cp); // 拷贝cp中的字符直到遇到空字符; s1 == "Hello world!!!"
+string s2 (noNull,2) ;
+//从noNull拷贝两个字符; s2 == "Hi"
+string s3 (noNu1l) ;
+//未定义: noNull不是以空字符结束
+strings4(cp+6，5);
+//从cp[6]开始拷贝5个字符; s4 == "World"
+string s5(s1, 6，5) ;
+//从s1[6]开始拷贝5个字符; s5 == "World"
+string s6(s1， 6) ;
+//从s1[6]开始拷贝，直至s1末尾; s6 == "World!!!"
+string s7 (s1, 6,20) ;
+//正确，只拷贝到s1末尾; s7 == "world!!!"
+string s8(s1， 16) ;
+//抛出一个out_ _of_ range异常
+```
+通常当我们从一一个const char*创建strinq时，指针指向的数组必须以空字符结尾，拷贝操作遇到空字符时停止。如果我们还传递给构造函数一个计数值，数组就不必以空字符结尾。如果我们未传递计数值且数组也未以空字符结尾，或者给定计数值大于数组大小，则构造函数的行为是未定义的。
+
+当丛一个string拷贝字符时，我们可以提供-一个可选的开始位置和一一个计数值。 开始位置必须小于或等于给定的string的大小。如果位置大于size,则构造函数抛出一个out_ of_ range 异常。如果我们传递了一个计数值，则从给定位置开始拷贝这么多个字符。不管我们要求拷贝多少个字符，标准库最多拷贝到string结尾，不会更多。
+
+![Alt text](image-38.png)
+
+string类型它还定义了额外的insert和erase版本,提供了接受下标的版本。
+下标指出了开始删除的位置，或是insert到给定值之前的位置:
+``` 
+    s.insert(s.size(), 5，'!'); // 在s末尾插入5个感叹号
+    s.erase(s.size() - 5，5) ;//从s删除最后5个字符
+```
+标准库string类型还提供了接受C风格字符数组的insert和assign版本。例如，我们可以将以空字符结尾的字符数组insert到或assign给一个string:
+```
+    const char *CP = "Stately, plump Buck";
+    s.assign(cp, 7) ;// s == "Stately"
+    s.insert(s.size()，cp + 7); // s == "Stately, plump Buck"
+```
+我们也可以指定将来自其他string或子字符串的字符插入到当前string中或赋予当前string:
+```
+    string s = "some string", s2 = "some other string";
+    s. insert(0，s2); //在s中位置0之前插入s2的拷贝
+    //在s[0]之前插入s2中s2[0]开始的s2.size()个字符
+    s. insert (0， s2， 0，s2.size()) ;
+```
+![Alt text](image-39.png)
+![Alt text](image-40.png)
+
+assign 总是替换string中的所有内容，append总是将新字符追加到string末尾。
+replace_函数提供了两种指定删除元素范围的方式。可以通过一个位置和一个长度来指定范围，也可以通过一个迭代器范围来指定。  
+insert函数允许我们用两种方式指定插入点:用一个下标或一个造代器。在两种情况下，新元素都会插入到给定下标(或迭代
+器)之前的位置。
+
+并不是每个函数都支持所有形式的参数。例如，insert就不支持下标和初始化列表参数。类似的，如果我们希望用迭代器指定插入点，就不能用字符指针指定新字符的来源。
+
+string类提供了6个不同的搜索函数，每个函数都有4个重载版本。每个搜索操作都返回一个string:size type值，表示匹
+配发生位置的下标。如果搜索失败，则返回一个名为string:npos的static成员标准库将npos定义为-一个const string::size_ type类型，并初始化为值-1。由于npos是一个unsigned类型，此初始值意味着npos等于任何string最大的可能大小。
+
+string搜索函数返回string:: size_ type值，该类型是一个unsigned类型。因此，用一个int或其他带符号类型来保存这些函数的返回值不是一个好主意
+
+搜索是大小写敏感的！
+![Alt text](image-41.png)
+![Alt text](image-42.png)
+```
+    string info{"cppxyz"};
+    cout << info.find("px",3) << endl;//npos,默认值是-1
+    string::size_type x = -1 ;
+    cout << x << endl;
+```
+
+标准库还提供了类似的，但由右至左搜索的操作。rfind成员函数搜索最后-一个匹配，即子字符串最靠右的出现位置
+
+compare有6个版本。根据我们是要比较两个string还是一个
+string与一个字符数组，参数各有不同。在这两种情况下，都可以比较整个或部分字符串。
+![Alt text](image-43.png)
+
+要转换为数值的string中第-一个非空白符必须是数值中可能出现的字符:
+```
+string s2 = "pi = 3.14";
+//转换s中以数字开始的第一个子串，结果d = 3.14
+d = stod(s2.substr (s2.find_ first_ of ("+-.0123456789"))) ;
+```
+string参数中第一个非空白符必须是符号(+或-)或数字。它可以以0x或0X开头来表示十六进制数。对那些将字符串转换为浮点值的函数，string参数也可以以小数点(.)开头，并可以包含e或E来表示指数部分。对于那些将字符串转换为整型值的函数，根据基数不同，string 参数可以包含字母字符，对应大于数字9的数。
+
+如果string不能转换为一个数值，这些函数抛出一个invalid _argument异常。如果转换得到的数值无法用任何类型来表示，
+则抛出一个out of range 异常。
+![Alt text](image-44.png)
+```
+    string s{"213afy"};
+    auto a = stoi(s);
+    cout << a << endl;//213
+
+    vector<string> s{"1","2","3"};
+    int sum = 0;
+    for(auto p:s)
+    {
+        sum += stoi(p);
+    }
+    cout << sum << endl;//6
+```
+
+### 9.6 容器适配器
+Container Adaptors
+
+除了顺序容器外，标准库还定义了三个顺序容器适配器: stack、 queue 和priority_ queue.适配器( adaptor)是标准库中的一个通用概念。容器、迭代器和函数都有适配器。本质上，一个适配器是一种机制，能使某种事物的行为看起来像另外一种事物一样。一个容器适配器接受一种已有的容器类型，使其行为看起来像一种不同的类型。
+![Alt text](image-45.png)
+每个适配器都定义两个构造函数:默认构造函数创建一个空对象，接受一个容器的构造函数拷贝该容器来初始化适配器。
+`stack<int> stk(deq); // 从deq拷贝元素到stk`
+
+默认情况下,stack 和queue是基于deque实现的，priority_ queue 是在vector 之上实现的。我们可以在创建一个适配器时将一个命名的顺序容器作为第二个类型参数,来重载默认容器类型。
+```
+//在vector.上实现的空栈
+stack<string, vector<string>> str_ stk;
+// str_ _stk2在vector上实现，初始化时保存svec的拷贝
+stack<string, vector<string>> str_ stk2 (svec) ;
+```
+对于一个给定的适配器，可以使用哪些容器是有限制的。所有适配器都要求容器且有添加和删除元素的能力。因此，适配器不能构造在array之上。类似的，我们也不能用forwardlist来构造适配器，因为所有适配器都要求容器具有添加、删除以及访问尾.
+元素的能力
+
+stack只要求pushback、popback和back操作，因此可以使用除array和forward_ list之外的任何容器类型来构造stack。
+
+queue 适配器要求back、push_ back、front和push_ front，因此它可以构造于list或deque之上，但不能
+基于vector构造。
+
+priority queue 除了front、push, _back和pop_ back操作之外还要求随机访问能力，因此它可以构造于vector或deque之上，但不能基于list构造。
+
+栈适配器：  
+```
+    stack<int> intStack; // empty stack
+    // fill up the stack
+    for (size_t ix = 0; ix != 10; ++ix)
+    intStack.push(ix); // intStack holds 0 . . . 9 inclusive
+    while (!intStack.empty()) 
+    { 
+        // while there are still values in intStack
+        int value = intStack.top();
+        // code that uses value
+        intStack.pop(); // pop the top element, and repeat
+    }
+```
+![Alt text](image-46.png)
+队列适配器：  
+标准库queue使用一种先进先出( first-in，first-out， FIFO) 的存储和访问策略。进入队列的对象被放置到队尾，而离开队列的对象则从队首删除。饭店按客人到达的顺序来为他们安排座位，就是一一个先进先出队列的例子。
+
+priority_ queue允许我们为队列中的元素建立优先级。新加入的元素会排在所有优先级比它低的已有元素之前。饭店按照客人预定时间而不是到来时间的早晚来为他们安排座位，就是一个优先队列的例子。默认情况下，标准库在元素类型上使用<运算符来确定相对优先级。
+![Alt text](image-47.png)
+![Alt text](image-48.png)
+
+使用stack处理括号化的表达式。当你看到一一个左括号，将其记录下来。当你在一一个左括号之后看到一个右括号，从stack中pop对象，直至遇到左括号，将左括号也一起弹出栈。 然后将一个值(括号内的运算结果) push 到栈中，表示一个括号化的(子)表达式已经处理完毕，被其运算结果所替代。
+```
+    string expression{ "This is (pezy)." };
+    bool bSeen = false;
+    stack<char> stk;
+    for (const auto &s : expression)
+    {
+        if (s == '(') { bSeen = true; continue; }
+        else if (s == ')') bSeen = false;
+        
+        if (bSeen) stk.push(s);
+    }
+    
+    string repstr;
+    while (!stk.empty())
+    {
+        repstr += stk.top();//This is (yzep).
+        repstr.insert(0,1,stk.top()) ;//This is (pezy).
+        stk.pop();
+    }
+    
+    expression.replace(expression.find("(")+1, repstr.size(), repstr);
+    
+    cout << expression << endl;
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
