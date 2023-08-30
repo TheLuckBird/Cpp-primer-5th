@@ -4,15 +4,22 @@
 #include <string>
 #include <list>
 #include <numeric>
+#include <fstream>
+#include "Sales_data.h"
 
 using namespace std;
+
+bool isShorter (const string &s1, const string &s2)
+{
+    return s1.size() < s2.size() ;
+}
 
 void elimDups(vector<string> &words)
 {   
     cout << "输入时：" << endl;
     for(auto p:words) cout << p << " ";
     cout << endl;
-    sort(words.begin(),words.end());
+    stable_sort(words.begin(),words.end(),isShorter);
     cout << "排序后：" << endl;
     for(auto p:words) cout << p << " ";
     cout << endl;
@@ -25,6 +32,16 @@ void elimDups(vector<string> &words)
     for(auto p:words) cout << p << " ";
     cout << endl;
 
+}
+
+bool compareIsbn(Sales_data item1,Sales_data item2)
+{
+    return item1.isbn() > item2.isbn();
+}
+
+bool out5(string s)
+{
+    return s.size() > 5;
 }
 
 int main(int argc, char const *argv[])
@@ -67,11 +84,64 @@ int main(int argc, char const *argv[])
 
     // for(auto p:ivec) cout << p << " " ;
 
-    string word;
-    vector<string> words;
-    while(cin >> word)
-        words.push_back(word);
-    elimDups(words);
+    // string word;
+    // vector<string> words;
+    // while(cin >> word)
+    //     words.push_back(word);
+    // elimDups(words);
+
+    // string s1{"0-201-70353-X"};
+    // string s2{"0-201-70353-X"};
+    // string s3{"0-201-82470-1"};
+    // Sales_data item1(s1),item2(s2),item3(s3);
+    // vector<Sales_data> vs{item1,item2,item3};
+    // sort(vs.begin(),vs.end(),compareIsbn);
+
+    // for(auto p:vs)
+    //     cout << p.isbn() << " ";
+    
+    // string word;
+    // vector<string> words;
+    // while(cin >> word)
+    //     words.push_back(word);
+    // cout << "输入时：" << endl;
+    // for(auto p:words) cout << p << " ";
+    // cout << endl;
+    // auto out5iter = partition(words.begin(),words.end(),out5);
+    // auto out5iter = partition(words.begin(),words.end(),[](string word){return word.size()>5;});
+    // cout << words.end()-out5iter << endl;
+    // cout << "排序后：" << endl;
+    // for(auto p:words) cout << p << " ";
+    // cout << endl;
+
+    // for(auto iter=words.begin();iter!=out5iter;++iter)
+    //     cout << *iter << " ";
+
+    // cout <<endl << "===========" << endl;
+    // string::size_type sz = 5;
+    // stable_sort(words.begin(),words.end(),[](const string &a, const string &b) 
+	//               { return a.size() < b.size();});
+    // auto first_iter = find_if(words.begin(),words.end(),[](string word){return word.size()>5;});
+    // cout << words.end()-first_iter << endl;
+    // for(auto iter=first_iter;iter!=words.end();++iter)
+    //     cout << *iter << " ";
+    // cout << endl;
+    // for(auto iter=words.begin();iter!=first_iter;++iter) cout << *iter << " ";
+    // int a,b;
+    // cout << "输入2个数字:"  << endl;
+    // cin >> a >> b;
+    // auto sum = [a,b]()->int{return a+b;};
+    // cout << sum() << endl;
+    // auto sum = [](int x,int y)->int{return x+y;};
+    // cout << sum(a,b) << endl;
+
+    string s1{"0-201-70353-X"};
+    string s2{"0-201-70353-X"};
+    string s3{"0-201-82470-1"};
+    Sales_data item1(s1),item2(s2),item3(s3);
+    vector<Sales_data> vs{item1,item2,item3};
+    sort(vs.begin(),vs.end(),[](Sales_data x,Sales_data y){return x.isbn()>y.isbn();});
+    for_each(vs.begin(),vs.end(),[](Sales_data item){cout << item.isbn();});
 
     return 0;
 }
