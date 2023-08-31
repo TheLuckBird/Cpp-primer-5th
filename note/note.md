@@ -2594,6 +2594,170 @@ for_each算法接受两个表示范围的迭代器，和一个可调用对象，
 
 捕获列表只用于局部非static变量，lambda可以直接使用局部static变量和在它所在函数之外声明的名字。
 
+lambda捕获和返回：  
+当定义一个lambda时，编译器生成一个与lambda对应的新的(未命名的)类类型。当向一个函数传递一个lambda时，同时定义了一个新类型和该类型的一个对象:传递的参数就是此编译器生成的类类型的未命名对象。
+
+当使用auto定义一个用lambda初始化的变量时，定义了一个从lambda生成的类型的对象。默认情况下，从lambda生成的类都包含一个对应该lambda所捕获的变量的数据成员，lambda的数据成员也在lambda对象创建时被初始化。
+
+变量的捕获方式也可以是值或引用。与传值参数类似，采用值捕获的前提是变量可以拷见。与参数不同，被捕获的变量的值是在lambda创建时拷贝，而不是调用时拷贝，随后对其修改不会影响到lambda内对应的值。
+```
+    void fcnl ()
+    {
+        size_ t v1 = 42; //局部变量
+        //将v1拷贝到名为f的可调用对象
+        auto f = [v1]{returnv1;};
+        v1 = 0;
+        auto j = f();//j为42;f保存了我们创建它时v1的拷贝
+    }
+```
+
+一个以引用方式捕获的变量与其他任何类型引用的行为类似。当我们在lambda函数体内使用此变量时，实际上使用的是引用所绑定的对象。
+
+引用捕获与返回引用有着相同的问题和限制。如果我们采用引用方式捕获一个变量，就必须确保被引用的对象在lambda执行的时候是存在的。lambda捕获的都是局部变量，这些变量在函数结束后就不复存在了。如果lambda可能在函数结束后执行，捕获的引用指向的局部变量已经消失
+
+我们也可以从一个函数返回lambda。函数可以直接返回一个可调用对象，或者返回一个类对象，该类含有可调用对象的数据成员。如果函数返回一个lambda,则与函数不能返回一个局部变量的引用类似，此lambda也不能包含引用捕获。
+
+隐式捕获：让编译器根据lambda体中的代码来推断我们要使用哪些变量。为了指示编译器推断捕获列表，应在捕获列表中
+写一个&或=,&引用捕获，=值捕获。
+```
+    // sz为隐式捕获，值捕获方式
+    WC = find_ if (words.begin()，words.end()，[=] (const string &s){ return s.size() >= sZ; }) ;
+```
+如果我们希望对一部分变量采用值捕获，对其他变量采用引用捕获、可以混合使用隐式捕获和显式捕获:
+```
+    void biggies (vector<string> &words,vector<string>: :size_ type SZ,
+    ostream &os = cout, char c =’')
+    {
+        // os隐式捕获， 引用捕获方式; c显式捕获， 值捕获方式
+        for each (words .begin()，words.end() ，[&，c](conststring&s){os<<s<C;});
+        // os显式捕获，引用捕获方式; c隐式捕获，值捕获方式.
+        for_ each (words.begin()，words .end() ,[=，&os](conststring&s){os<<s<<C;});
+    }
+```
+
+当我们混合使用隐式捕获和显式捕获时，捕获列表中的第一个元素必须是-一个&或=。此符号指定了默认捕获万式为引用或值。
+
+当混合使用隐式捕获和显式捕获时，显式捕获的变量必须使用与隐式捕获不同的方式。即，如果隐式捕获是引用方式(使了&)，则显式捕获命名变量必须采用值万式，因此不能在其名字前使用&。类似的，如果隐式捕获采用的是值方式(使用了=)，则显式捕获命名变量必须采用引用方式，即，在名字前使用&。
+![Alt text](image-49.png)
+
+默认情况下，对于一个值被拷贝的变量，lambda不会改变其值。如果我们希望能改变一个被捕获的变量的值，就必须在参数列表首加上关键字mutable。因此，可变lambda能省略参数列表:
+```
+    void fcn3()
+    {
+        size_t v1 = 42;
+        auto f = [v1] () mutable {return ++v1;};
+        cout << v1 << endl;//42
+        cout << f() << endl;//43
+    }
+```
+一个引用捕获的变量是否(如往常-样)可以修改依赖于此引用指向的是一个const类型还是一个韭const类型
+```
+    void fcn4 ()
+    {
+        size_ t v1 = 42; //局部变量
+        // v1是一个非const变量的引用
+        //可以通过f2中的引用来改变它
+        auto f2 = [&v1] { return ++v1; } ;
+        v1=0;
+        auto j = f2();//j为1
+    }
+```
+默认情况下，如果一个lambda体包含return 之外的任何语句，则编译器假定此lambda返回void。与其他返回void的函数类似，被推断返回void的lambda不能返回值。
+
+标准库transform 算法和一个lambda来将一个序列中的每个负数替换为其绝对值:
+```
+    transform(vi.begin(), vi.end(), vi.begin(),[](inti){returni<0?-i:i;});
+```
+
+我们传递给transform一个lambda, 它返回其参数的绝对值。lambda体是单一的return语句，返回一个条件表达式的结果。我们无须指定返回类型，因为可以根据条件运算符的类型推断出来。
+
+如果我们将程序改写为看起来是等价的if语句，就会产生编译错误:
+```
+    //错误:不能推断lambda的返回类型
+    transform(vi.begin()，vi.end(), vi.begin() ,
+    [](inti){if(i<0)return-i;elsereturni;});
+```
+编译器推断这个版本的lambda返回类型为void，但它返回了一个int值。
+
+对于那种只在一两个地方使用的简单操作，lambda表达式是最有用的。如果我们需要在很多地方使用相同的操作，通常应该定义一个函数，而不是多次编写相同的lambda表达式。类似的，如果一个操作需要很多语句才能完成，通常使用函数更好。
+
+如果lambda的捕获列表为空，通常可以用函数来代替它。但是，对于捕获局部变量的lambda,用函数来替换它就不是那么容易了。
+用在find_if调用中的lambda比较一个 string和一个给定大小。
+```
+    bool check_size (const string &S，string: :size_ type sz) 
+    {
+        return s.size() >= sZ;
+    }
+```
+但是，我们不能用这个函数作为find_if 的一个参数find_ if 接受一个一元谓词，因此传递给find_if的可调用对象必须接受单一参数。biggies传递给find_if的lambda使用捕获列表来保存Sz。为了用check_size来代替此lambda,必须解决如何向sz形参传递一个参数的问题。
+
+我们可以解决向check_size传递一个长度参数的问题，方法是使用一个新的名为bind的标准库函数，它定义在头文件functional中。可以将bind函数看作一个通用的函数适配器，它接受-一个可调用对象，生成一个新的可调用对象来“适应”原对象的参数列表。
+
+调用bind的一般形式为:
+auto newCallable = bind (callable, arg_ _list) ;
+其中，newCallable 本身是一一个可调用对象，arg_ list 是一个逗号分隔的参数列表，对应给定的callable的参数。即，当我们调用newCallable时，newCallable会调用callable, 并传递给它arg list 中的参数。
+
+arg_ list 中的参数可能包含形如_ n的名字，其中n是一个整数。这些参数是“占位符”，表示newCallable的参数，它们占据了传递给newCallable的参数的“位置”。数值n表示生成的可调用对象中参数的位置:_ 1 为newCallable的第一个参数，_2 为第二个参数，依此类推。
+
+我们将使用bind生成-一个调用check_ _size 的对象，如下
+所示，它用一个定值作为其大小参数来调用check_ _size
+```
+    // check6是一个可调用对象，接受一个string类型的参数
+    //并用此string和值 6来调用 check_ size 
+    auto check6 = bind (check_ size,_ 1， 6);
+```
+此bind调用只有一个占位符，表示check6只接受单一参数。占位符出现在arg list 的第一个位置，表示check6的此参数对应check_size的第一个参数。此参数是一个const string&。因此，调用check6必须传递给它一个string类型的参数，check6
+会将此参数传递给check_size.
+```
+    string s = "hello";
+    bool b1 = check6(s) ; // check6(s) 会调用check_ size(s， 6)
+```
+使用bind,我们可以将原来基于lambda的find_if调用:
+```
+    auto wC = find_if (words.begin()，words.end() ,[sz] (const string &a))
+```
+替换为如下使用check_ size的版本:
+```
+    auto WC = find_ if (words.begin()，words.end(),bind(check_ size,_ 1， sz)) ;
+```
+此bind调用生成一个可调用对象，将check_size的第一个参数绑定到sz的值。当find_ if 对words中的string调用这个对象时，这些对象会调用check_ size,将给定的string和sz传递给它。因此，find_ if可以有效地对输入序列中每个string
+调用check_ size,实现string的大小与sz的比较。
+
+名字_n都定义在一个名为placeholders的命名空间中，而这个命名空间本身定义在std命名空间中。为了使用这些名字，两个命名空间都要写上。
+
+对每个占位符名字，我们都必须提供一一个 单独的using声明。编写这样的声明很烦人，也很容易出错。可以使用另外一种不同形式的using语句，而不是分别声明每个占位符，如下所示:
+`using namespace namespace name;`
+这种形式说明希望所有来自namespace_ name的名字都可以在我们的程序中直接使用。
+
+`using namespace std: :placeholders;`
+使得由placeholders定义的所有名字都可用。与bind函数一样， placeholders命名空间也定义在functional头文件中。
+
+我们可以用bind修正参数的值。更一般的，可以用bind绑定给定可调用对象中的参数或重新安排其顺序。
+例如，假定f是一个可调用对象，它有5个参数，则下面对bind的调用:
+```
+    // g是一个有两个参数的可调用对象
+    autog=bind(f,a,b,_2，c,_1);
+```
+生成一个新的可调用对象，它有两个参数。分别用占位符_2和_1表示。这个新的可调用对象将它自己的参数作为第三个和第五个参数传递给f。f的第一个、第二个和第四个参数分别被绑定到给定的值a、b和c上。
+传递给g的参数按位置绑定到占位符。即。第一个参数绑定到_1，第二个参数绑定到_2。因此，当我们调用g时，其第一个参数将被传递给f作为最后一个参数，第二个参数将被传递给f作为第三个参数。实际上，这个bind调用会将：
+```
+    g(_1,_2)
+    映射为
+    f(a, b, _2, c，_1)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -5,6 +5,7 @@
 #include <list>
 #include <numeric>
 #include <fstream>
+#include <functional>
 #include "Sales_data.h"
 
 using namespace std;
@@ -42,6 +43,46 @@ bool compareIsbn(Sales_data item1,Sales_data item2)
 bool out5(string s)
 {
     return s.size() > 5;
+}
+
+void fcnl ()
+{
+    size_t v1 = 42; //局部变量
+    //将v1拷贝到名为f的可调用对象
+    auto f = [v1]{return v1;};
+    v1 = 0;
+    auto j = f();//j为42;f保存了我们创建它时v1的拷贝
+    cout << "j:" << j << endl;
+    cout << "v1:" << v1 << endl;
+}
+
+void fcn2 ()
+{
+    size_t v1 = 42; //局部变量
+    //将v1拷贝到名为f的可调用对象
+    auto f = [&v1]{return v1;};
+    v1 = 0;
+    auto j = f();//j为42;f保存了我们创建它时v1的拷贝
+    cout << "j:" << j << endl;
+    cout << "v1:" << v1 << endl;
+}
+
+void fcn3()
+{
+    size_t v1 = 42;
+    auto f = [v1] () mutable {return ++v1;};
+    cout << v1 << endl;//42
+    cout << f() << endl;//43
+}
+
+void outsix(vector<string> &vs)
+{
+    cout << count_if(vs.begin(),vs.end(),[](string word){return word.size()>6?1:0;});
+}
+
+bool check_size(string s,size_t sz)
+{
+    return s.size() < sz;
 }
 
 int main(int argc, char const *argv[])
@@ -135,13 +176,42 @@ int main(int argc, char const *argv[])
     // auto sum = [](int x,int y)->int{return x+y;};
     // cout << sum(a,b) << endl;
 
-    string s1{"0-201-70353-X"};
-    string s2{"0-201-70353-X"};
-    string s3{"0-201-82470-1"};
-    Sales_data item1(s1),item2(s2),item3(s3);
-    vector<Sales_data> vs{item1,item2,item3};
-    sort(vs.begin(),vs.end(),[](Sales_data x,Sales_data y){return x.isbn()>y.isbn();});
-    for_each(vs.begin(),vs.end(),[](Sales_data item){cout << item.isbn();});
+    // string s1{"0-201-70353-X"};
+    // string s2{"0-201-70353-X"};
+    // string s3{"0-201-82470-1"};
+    // Sales_data item1(s1),item2(s2),item3(s3);
+    // vector<Sales_data> vs{item1,item2,item3};
+    // sort(vs.begin(),vs.end(),[](Sales_data x,Sales_data y){return x.isbn()>y.isbn();});
+    // for_each(vs.begin(),vs.end(),[](Sales_data item){cout << item.isbn();});
+
+    // fcnl();
+    // fcn2();
+    // fcn3();
+    // vector<string> vs{"cpp","c","object-c","java","python","go","gyujgfyug"};
+    // outsix(vs);
+    // int v;
+    // cin >> v;
+    // auto f = [&v]()->bool{for(;v!=0;){cout << --v << endl;}return true;};
+    // f();
+
+    // int i = 7;
+    // auto check_and_decrement = [&i]() { return i > 0 ? !--i : !i; };
+    // std::cout << "ex10.21: ";
+    // while(!check_and_decrement())
+    //     std::cout << i << " ";
+    // std::cout << i << std::endl;
+
+    // string s{"cpp"};
+    // vector<int> ivec{0,1,2,3,4};
+    // find_if()
+    
+    vector<int> vec{ 0, 1, 2, 3, 4, 5, 6, 7 };
+    string str("123456");
+    auto result = find_if(vec.begin(), vec.end(), bind(check_size, str, std::placeholders::_1));
+    if (result != vec.end())
+        cout << *result << endl;
+    else
+        cout << "Not found" << endl;
 
     return 0;
 }
