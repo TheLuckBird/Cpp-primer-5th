@@ -88,6 +88,31 @@ bool check_size(string s,size_t sz)
     return s.size() < sz;
 }
 
+void foo(string in,string out1,string out2)
+{   
+    ifstream is (in);
+    ofstream os2(out2);
+    ostream_iterator<int> out_iter2(os2," ");
+    ofstream os1(out1);
+    ostream_iterator<int> out_iter1(os1,"\n");
+    istream_iterator<int> in_iter(is),eof;
+    while (in_iter!=eof)
+    {
+        if(*in_iter%2==0)
+        {
+            *out_iter2 = *in_iter;
+        }
+        else
+        {
+            *out_iter1 = *in_iter;   
+        }
+        in_iter++;
+    }
+    
+    
+        
+}
+
 int main(int argc, char const *argv[])
 {
     // vector<int> ivec{1,2,3,1,2,1,1,2,4,56};
@@ -250,13 +275,38 @@ int main(int argc, char const *argv[])
     // cout << endl;
     // cout << "标准输入cin的和:" << accumulate(int_iter,eof,0);
 
-    ostream_iterator<int> int_oi(cout," ");
-    list<int> li{1,9,1,1,2,3};
-    for(auto p:li)
-        *int_oi++ = p;
-    cout << endl;
-    copy(li.begin(),li.end(),int_oi);
+    // ostream_iterator<int> int_oi(cout," ");
+    // list<int> li{1,9,1,1,2,3};
+    // for(auto p:li)
+    //     *int_oi++ = p;
+    // cout << endl;
+    // copy(li.begin(),li.end(),int_oi);
 
+    // ifstream in("text.txt");
+    // istream_iterator<string> in_iter(in),eof;
+    // vector<string> svec;
+    // while (in_iter!=eof)
+    // {
+    //     svec.push_back(*in_iter++);
+    // }
+    // // for(auto p:svec)
+    // //     cout << p <<  " ";
+    // // cout << endl;
+    // copy(svec.cbegin(),svec.cend(),std::ostream_iterator<string>(cout," "));
 
+    // vector<int> ivec;
+    // istream_iterator<int> in_iter(cin),eof;
+    // copy(in_iter,eof,back_inserter(ivec));
+    // std::vector<int> ivec(std::istream_iterator<int>(std::cin), std::istream_iterator<int>());
+    // sort(ivec.begin(),ivec.end());
+    // ostream_iterator<int> out_iter(cout," ");
+    // // copy(ivec.cbegin(),ivec.cend(),out_iter);
+    // unique_copy(ivec.cbegin(),ivec.cend(),out_iter);
+
+    // foo(string("in.txt"),string("out1.txt"),"out2.txt");
+
+    vector<int> ivec{2,1,3};
+    sort(ivec.begin(),ivec.end());
+    for_each(ivec.cbegin(),ivec.cend(),[](int i){cout << i << " ";});
     return 0;
 }

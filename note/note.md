@@ -2828,6 +2828,42 @@ ostream_iterator 操作：
     copy (vec.begin(), vec.end() ，out_ iter) ;
     cout < << endl;
 ```
+反向迭代器就是在容器中从尾元素向首元素反向移动的迭代器。对于反向迭代器，递增(以及递减)操作的含义会颠倒过来。递增一个反向迭代器(++it)会移动到前一个元素;递减一个迭代器(--it)会移动到下一个元素。
+
+除了forward_ list之外,其他容器都支持反向迭代器。我们可以通过调用rbegin、rend、crbegin 和crend成员函数来获得反向迭代器。这些成员函数返回指向容器尾元素和首元素之前一个位置的迭代器。与普通迭代器一样，反向迭代器也有const和非const版本。
+![Alt text](image-53.png)
+
+可以通过向sort传递--对反向迭代器来将vector整理为递减序:
+```
+    sort (vec.begin(), vec.end()); // 按“正常序”排序vec
+    //按逆序排序:将最小元素放在vec的末尾
+    sort (vec. rbegin()，vec. rend() ) ;
+```
+
+反向迭代器需要递减运算符不必惊讶，我们只能从既支持++也支持--的迭代器来定义反向迭代器。毕竞反向迭代器的目的是在序列中反向移动。除了forward_ list之外，标准容器上的其他迭代器都既支持递增运算又支持递减运算。但是，流迭代器不支持递减运算，因为不可能在一一个流中反向移动。因此，不可能从一个forward list或一个流迭代器创建反向迭代器。
+
+我们使用的是反向迭代器，会反向处理string。因此，上
+述输出语句从crbegin 开始反向打印line中内容。而我们希望按正常顺序打印从rcomma开始到line末尾间的字符。但是，我们不能直接使用rcomma。因为它是一一个反向迭代器，意味着它会反向朝着string的开始位置移动。需要做的是，将rcomma转
+换回一个普通迭代器，能在line中正向移动。我们通过调用reverse_ iterator 的base成员函数来完成这一转换，此成员函数会返回其对应的普通迭代器
+![Alt text](image-54.png)
+
+```
+	string line;
+	getline(cin, line);
+
+	// find the first element in a comma-separated list
+	auto comma = find(line.cbegin(), line.cend(), ',');
+	cout << string(line.cbegin(), comma) << endl;
+	
+	// find the last element in a comma-separated list
+	auto rcomma = find(line.crbegin(), line.crend(), ',');
+	
+	// WRONG: will generate the word in reverse order
+	cout << string(line.crbegin(), rcomma) << endl;
+	
+	// ok: get a forward iterator and read to the end of line
+	cout << string(rcomma.base(), line.cend()) << endl;
+```
 
 
 
