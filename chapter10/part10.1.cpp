@@ -3,9 +3,12 @@
 #include <iostream>
 #include <string>
 #include <list>
+#include <deque>
+#include <forward_list>
 #include <numeric>
 #include <fstream>
 #include <functional>
+#include <iterator>
 #include "Sales_data.h"
 
 using namespace std;
@@ -205,13 +208,55 @@ int main(int argc, char const *argv[])
     // vector<int> ivec{0,1,2,3,4};
     // find_if()
     
-    vector<int> vec{ 0, 1, 2, 3, 4, 5, 6, 7 };
-    string str("123456");
-    auto result = find_if(vec.begin(), vec.end(), bind(check_size, str, std::placeholders::_1));
-    if (result != vec.end())
-        cout << *result << endl;
-    else
-        cout << "Not found" << endl;
+    // vector<int> vec{ 0, 1, 2, 3, 4, 5, 6, 7 };
+    // string str("123456");
+    // auto result = find_if(vec.begin(), vec.end(), bind(check_size, str, std::placeholders::_1));
+    // if (result != vec.end())
+    //     cout << *result << endl;
+    // else
+    //     cout << "Not found" << endl;
+
+    // vector<int> vec{ 0, 1,1,1,1, 2,1,2, 3, 4, 5, 6, 7,9 };
+    // std::vector<int> vec{ 1, 1, 3, 3, 5, 5, 7, 7, 9 };
+    // list<int> li;
+    // unique_copy(vec.begin(),vec.end(),back_inserter(li));
+    // for(auto p:li) cout << p << " ";
+
+    // std::vector<int> vec{ 1, 1, 3, 3, 5, 5, 7, 7, 9 };
+    // std::list<int> lst;
+    
+    // std::unique_copy(vec.begin(), vec.end(), back_inserter(lst));
+    // for (auto i : lst)
+    //     std::cout << i << " ";
+    // std::cout << std::endl;
+
+    // vector<int> ivec{1,9};
+    // list<int> il;
+    // deque<int> id;
+    // forward_list<int> ifo;
+    // copy(ivec.begin(),ivec.end(),inserter(il,il.begin()));
+    // for(auto p:il) cout << p <<" ";
+    // cout << endl;
+    // copy(ivec.begin(),ivec.end(),back_inserter(id));
+    // for(auto p:id) cout << p <<" ";
+    // cout << endl;
+    // copy(ivec.begin(),ivec.end(),front_inserter(ifo));
+    // for(auto p:ifo) cout << p <<" ";
+    // cout << endl;
+
+    // istream_iterator<int> int_iter(cin),eof;
+    // vector<int> ivec(int_iter,eof);
+    // for(auto p:ivec) cout << p <<" ";
+    // cout << endl;
+    // cout << "标准输入cin的和:" << accumulate(int_iter,eof,0);
+
+    ostream_iterator<int> int_oi(cout," ");
+    list<int> li{1,9,1,1,2,3};
+    for(auto p:li)
+        *int_oi++ = p;
+    cout << endl;
+    copy(li.begin(),li.end(),int_oi);
+
 
     return 0;
 }

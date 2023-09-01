@@ -2745,6 +2745,96 @@ arg_ list 中的参数可能包含形如_ n的名字，其中n是一个整数。
     映射为
     f(a, b, _2, c，_1)
 ```
+### 10.4 再探迭代器
+插入迭代器：  
+插入器是一种迭代器适配器，它接受一个容器，生成一个迭代器，能实现向给定容器添加元素。当我们通过一个插入迭代器进行赋值时，该迭代器调用容器操作来向给定容器的指定位置插入一个元素。
+![Alt text](image-50.png)
+插入器有三种类型，差异在于元素插入的位置:  
+back_inserter创建一个使用push_back的迭代  
+front_inserter创建一一个使用push_front的迭代器。  
+inserter 创建-一个使用insert的迭代器。此函数接受第二个参数,这个参数必须是一个指向给定容器的迭代器。元素将被插入到给定迭代器所表示的元素之前。  
+只有在容器支持push_front的情况下,我们才可以使用front_ _inserter，只有在容器支持push_back的情况下，我们才能使用back_inserter。
+
+当调用inserter (c，iter)时。我们得到一个迭代器，接下来使用它时，会将元素插入到iter原来所指向的元素之前的位置。即，如果it是由inserter生成的迭代器，则下面这样的赋值语句
+```
+    *it = val;
+```
+其效果与下面代码一样
+```
+    it = c.insert(it, val); // it指向新加入的元素
+    ++it; // 递增it使它指向原来的元素
+```
+
+iostream迭代器：  
+虽然iostream类型不是容器，但标准库定义了可以用于这些I0类型对象的迭代器。istream_iterator读取输入流，ostream_iterator 向一个输出流写数据。这些迭代器将它们对应的流当作一个特定类型的元素序列来处理。通过使用流迭代器，我们可以用泛型算法从流对象读取数据以及向其写入数据。
+
+istream_iterator 操作  
+当创建一个流迭代器时，必须指定迭代器将要读写的对象类型。一个istream_iterator 使用>>来读取流。因此，istream_ iterator要读取的类型必须定义了输入运算符。当创建一个istream_iterator 时，我们可以将它绑定到一个流。
+当然，我们还可以默认初始化迭代器，这样就创建了一个可以当作尾后值使用的迭代器。
+```
+    istream_ iterator<int> int_ it(cin) ; // 从cin读取int
+    istream_ iterator<int> int_ eof;//尾后迭代器
+    ifstream in("afile") ;
+    istream_ iterator<string> str_ it(in); // 从"afile"读取字符串
+
+    //用istream iterator从标准输入读取数据，存入一个vector的例子:
+    istream iterator<int> in_ iter(cin); // 从cin读取int
+    istream iterator<int> eof;
+    // istream 尾后迭代器:
+    while (in_ iter != eof)
+        //当有数据可供读取时
+        //后置递增运算读取流，返回迭代器的旧值
+        //解引用迭代器，获得从流读取的前一个值
+        vec.push_ back(*in_ iter++) ;
+```
+对于一个绑定到流的迭代器，一且其关联的流遇到文件尾或遇到I0错误，迭代器的值就与尾后迭代器相等。
+后置递增运算会从流中读取下一一个值，向前推进，但返回的是迭代器的旧值。迭代器的旧值包含了从流中读取的前一一个值，对迭代器进行解引用就能获得此值。
+
+我们可以将程序重写为如下形式，这体现了istream_iterator更有用的地方:
+```
+    istream_iterator<int> in_iter(cin),eof; //从cin读取int
+    vector<int> vec(in_iter, eof); // 从迭代器范围构造vec
+
+    cout << "标准输入cin的和:" << accumulate(int_iter,eof,0);
+```
+我们用一对表示元素范围的迭代器来构造vec。这两个迭代器是istream_iterator,这意味着元素范围是通过丛关联的流中读取数据获得的。这个构造函数从cin中读取数据，直至遇到文件尾或者遇到一个不是int的数据为止。从流中读取的数据被用来构造vec。
+![Alt text](image-51.png)
+
+istreamiterator允许使用懒惰求值：  
+当我们将一个istream_iterator 绑定到一一个流时，标准库并不保证迭代器立即从流读取数据。具体实现可以推迟从流中读取数据，直到我们使用迭代器时才真正读取。标准库中的实现所保证的是，在我们第一次 解引用迭代器之前，从流中读取数据的操作已经完成了。对于大多数程序来说，立即读取还是推迟读取没什么差别。但是，如果我们创建了一个istream_iterator, 没有使用就销毁了，或者我们正在从两个不同的对象同步读取同一个流，那么何时读取可能就很重要了。
+
+ostream_iterator 操作：  
+我们可以对任何具有输出运算符(<< 运算符)的类型定义ostream_iterator。当创建一个ostream_iterator 时，我们可以提供(可选的)第二参数，它是一个字符串，在输出每个元素后都会打印此字符串。此字符串必须是一一个C风格字符串(即，一个字符串字面常量或者一个指向以空字符结尾的字符数组的指针)。必须将ostream_iterator绑定到一个指定的流，不允许空的或表示尾后位置的ostream_iterator.
+![Alt text](image-52.png)
+
+可以用ostream iterator 来输出值的序列:
+```
+    ostream_ iterator<int> out_ iter (cout, "-") ;
+    for (auto e : vec)
+        *out_ iter++ = e; //赋值语句实际上将元素cout
+    cout. << endl;
+```
+每次向out_iter 赋值时，写操作就会被提交。
+值得注意的是，当我们向out_ iter 赋值时，可以忽略解引用和递增运算。即，循环可以重写成下面的样子:
+```
+    for(auto e : vec)
+    out_ iter = e; //赋值语句将元素写到cout
+    cout < <. endl ;
+```
+运算符*和++实际上对ostream iterator对象不做任何事情，因此忽略它们对我们的程序没有任何影响。但是，推荐第一种形式。在这种写法中，流迭代器的使用与其他迭代器的使用保持一致。如果想将此循环改为操作其他迭代器类型，修改起来非常容易。而且,对于读者来说，此循环的行为也更为清晰。
+
+可以通过调用copy来打印vec中的元素，这比编写循环更为简单:
+```
+    copy (vec.begin(), vec.end() ，out_ iter) ;
+    cout < << endl;
+```
+
+
+
+
+
+
+
 
 
 
