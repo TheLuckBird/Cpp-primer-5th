@@ -2970,9 +2970,120 @@ _if 版本的算法：
 多数链表特有的算法都与其通用版本很相似，但不完全相同。链表特有版本与通用版本间的一一个 至关重要的区别是链表版本会改变底层的容器。
 例如，remove 的链表版本会删除指定的元素。unique的链表版本会删除第二个和后继的重复元素。类似的，merge和splice会销毁其参数。例如，通用版本的merge将合并的序列写到一个给定的目的迭代器;两个输入序列是不变的。而链表版本的merge函数会销毁给定的链表一元 素从参数指定的链表中删除，被合并到调用merge的链表对象中。在merge之后，来自两个链表中的元素仍然存在，但它们都已在同一个链表中。
 
+## 第11章 关联容器
 
+关联容器和顺序容器有着根本的不同:关联容器中的元素是按关键字来保存和访问的。与之相对，顺序容器中的元素是按它们在容器中的位置来顺序保存和访问的。
+![Alt text](image-59.png)
 
+关联容器支持高效的关键字查找和访问。两个主要的关联容器(associative-container)类型是map和set。map中的元素是一些关键字-值(key-value) 对:关键字起到索引的作用， 值则表示与索引相关联的数据。set中每个元素只包含一个关键字; set支持高效的关键字查询操作一检查一个给定关键字是否在set中。
 
+类型map和multimap定义在头文件map中;set和multiset定义在头文件set中;无序容器则定义在头文件unordered_map和unordered_set中。
+
+### 11.1 使用关联容器
+```
+    //使用map
+    map<string,size_t> word_count;
+    string word; 
+    while(cin >> word)
+        ++word_count[word];
+    for(auto p:word_count)
+        cout << p.first << ":" << p.second << endl;
+```
+关联容器也是模板。为了定义一个map我们必须指定关键字和值的类型。在此程序中，map保存的每个元素中，关键字是string
+类型，值是size_t类型。当对word count 进行下标操作
+时，我们使用一个string作为下标，获得与此string相关联的size_t类型的计数器。
+
+while循环每次从标准输入读取一个单词。它使用每个单词对word count进行下标操作。如果word还未在map中，下标运算符会创建一个新元素，其关键字为word,值为0。不管元素是否是新创建的，我们将其值加1。
+
+当从map中提取一个元素时，会得到一个pair类型的对象，pair是一个模板类型，保存两个名为first和second的(公有)数据成员。map所使用的pair用first成员保存关键字，用second成员保存对应的值。
+```
+    //使用set
+    set<string> exclude = {"The", "But", "And", "Or", "An", "A", 
+	                       "the", "but", "and", "or", "an", "a"}; 
+    while (cin >> word)
+    {
+        if(exclude.find(word)==exclude.end())
+            ++word_count[word];
+    }
+    
+    for(auto p:word_count)
+        cout << p.first << ":" << p.second << endl;
+```
+### 11.2 关联容器概述
+关联容器(有序的和无序的)都支持普通容器操作。关联容器不支持顺序容器的位置相关的操作，例如push_ front或pushback。原因是关联容器中元素是根据关键字存储的，这些操作对关联容器没有意义。而且，关联容器也不支持构造函数或插入操作这些接受一个元素值和一个数量值的操作。
+
+除了与顺序容器相同的操作之外，关联容器还支持一些顺序容器不支持的操作和类型别名。此外，无序容器还提供一些用来调整哈希性能的操作，关联容器的迭代器都是双向的
+
+当定义一个map时，必须既指明关键字类刑又指明值类型:而定义一个set时，只需指明关键字类型，因为set中没有值。每个关联容器都定义了一个默认构造函数，它创建一个指定类型的空容器。我们也可以将关联容器初始化为另一个同类型容器的拷贝，或是从一个值范围来初始化关联容器，只要这些值可以转化为容器所需类型就可以。
+```
+    map<string,string> info = {{"p","fh"},{"language","cpp"}};
+    for(auto p:info) cout << "name:" << p.first << "-" << p.second << endl;
+```
+当初始化一个map时，必须提供关键字类型和值类型。我们将每个关键字值对包围在花括号中:{key, value}来指出它们一起构成了map中的一个元素。在每个花括号中，关键字是第一个元素，值是第二个。
+
+容器multimap和multiset都允许多个元素具有相同的关键字。
+```
+    // 向 multiset 中插入元素
+    mySet.insert(5);
+    mySet.insert(2);
+    mySet.insert(8);
+    mySet.insert(2); // 允许存储重复的元素
+
+    // 使用迭代器遍历 multiset 并输出元素
+    for (const int& num : mySet) {
+        std::cout << num << " ";
+    }//2 2 5 8
+
+    // 向 multimap 中插入键值对
+    studentScores.insert({"Alice", 95});
+    studentScores.insert({"Bob", 87});
+    studentScores.insert({"Alice", 92}); // 允许存储多个相同的键
+
+    // 使用迭代器遍历 multimap 并输出键值对
+    for (const auto& pair : studentScores) {
+        std::cout << pair.first << ": " << pair.second << std::endl;
+    }//Alice: 95 Alice: 92 Bob: 87
+```
+
+关联容器对其关键字类型有一些限制,对于有序容器一map、 multimap、set以及multiset，关键字类型必须定义元素比较的方法。默认情况下，标准库使用关键字类型的<运算符来比较两个关键字。在set类型中，关键字类型就是元素类型,在map类型中，关键字类型是元素的第一部分的类型。
+
+有序容器的关键字类型:  
+可以向一一个算法提供我们自已定义的比较操作，与之类似，也可以提供自己定义的操作来代替关键字上的<运算符。所提供的操作必须在关键字类型上定义一个严格弱序(strict weak ordering)。可以将严格弱序看作“小于等于”，虽然实际
+定义的操作可能是一个复杂的函数。无论我们怎样定义比较函数,它必须具备如下基本性质:
+
+●两个关键字不能同时“小于等于”对方:如果k1“小于等于”k2，那么k2绝不能“小于等于”k1。
+
+●如果k1“小干等干”k2，且k2“小于等于”k3，那么k1必须“小于等于”k3。
+
+●如果存在两个关键字，任何一个都不“小于等于”另一个，那么我们称这两个关键字是“等价”的。如果k1“等价于”k2，且k2“等价于”k3，那么kl必须“等价于”k3。
+
+如果两个关键字是等价的(即，任何一个都不“小于等于”另-一个)，那么容器将它们视作相等来处理。当用作map的关键字时，只能有一个元素与这两个关键字关联，我们可以用两者中任意一个来访问对应的值。
+
+使用关键字类型的比较函数：  
+用来组织一个容器中元素的操作的类型也是该容器类型的一部分。为了指定使用自定义的操作，必须在定义关联容器类型时提供此操作的类型。用尖括号指出要定义哪种类型的容器，自定义的操作类型必须在尖括号中紧跟着元素类型给出。
+
+在尖括号中出现的每个类型，就仅仅是一个类型而已。当我们创建一个容器(对象)时，才会以构造函数参数的形式提供真正的比较操作(其类型必须与在尖括号中指定的类型相吻合)。
+
+例如，我们不能直接定义一个Sales data的multieet,因为Salee_ data没有<运算符。但是，可以用compareIsbn函数来定义一个multiset。此函数在sales data对象的ISBN 成员上定义了一个严格弱序。
+```
+    bool compareIsbn (const Sales data &lhs， const Sales_ data &rhs)
+    {
+        return lhs.isbn() < rhs. isbn() ;
+    }
+```
+为了使用自己定义的操作，在定义multiset时我们必须提供两个类型:关键字类型Sales data, 以及比较操作类型应该是一种函数指针类型,可以指向compareIsbn。当定义此容器类型的对象时，需要提供想要使用的操作的指针。
+
+我们提供一一个指向compareIsbn的指针:
+```
+    // bookstore 中多条记录可以有相同的ISBN
+    // bookstore 中的元素以ISBN的顺序进行排列
+    multiset<Sales_ data, decltype (compareIsbn) *>bookstore (compareIsbn) ;
+    
+    typedef bool (*pf) (const Sales_ data &，const Sales_ data &) ;
+    multiset<Sales_ data, pf> bookstore (compareIsbn) ;
+
+```
+我们使用decltype来指出自定义操作的类型，当用decltype来获得一个函数指针类型时，必须加上一个*来指出我们要使用一个给定函数类型的指针。用compareIsbn来初始化bookstore对象,这表示当我们向bookstore添加元素时，通过调用compareIsbn来为这些元素排序。即，bookstore 中的元素将按它们的ISBN成员的值排序。可以用compareIsbn代替&compareIsbn作为构造函数的参数
 
 
 
