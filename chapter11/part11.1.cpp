@@ -6,6 +6,7 @@
 #include <list>
 #include <fstream>
 #include <sstream>
+#include <utility>
 
 using namespace std;
 
@@ -21,6 +22,11 @@ auto add_child(map<string,vector<string>> &families,string family,string child)
 {
     
     families[family].push_back(child);
+}
+
+auto add_child(map<string,vector<pair<string,int>>> &families,string family,string child,int age)
+{
+    families[family].push_back({child,age});
 }
 
 void add_word(vector<string> &svec,string word)
@@ -64,6 +70,35 @@ void word_line(string file)
 
 }
 
+pair<string,int> process(vector<string> &v)
+{
+    if(!v.empty())
+        //新标准下，可以对返回值进行列表初始化
+        return {v.back(),v.back().size()};
+        //旧版本，必须显示构造返回值
+        //return pair<string,int>(v.back(),v.back().size());
+        //也可以使用make_pair
+        //return (v.back(),v.back().size());
+    else
+        return pair<string,int> ();
+}
+
+void vp()
+{
+    vector<pair<string,int>> vpsi;
+    string s;
+    int v;
+    while (cin>>s&&cin>>v)
+    {
+        vpsi.push_back(pair<string,int>(s,v));
+        vpsi.push_back({s,v});
+        vpsi.push_back(make_pair(s,v));
+    }
+
+    for_each(vpsi.cbegin(),vpsi.cend(),[](pair<string,int> p){cout <<p.first << " " << p.second << endl; });
+    
+}
+
 int main(int argc, char const *argv[])
 {
     // map<string,size_t> word_count;
@@ -73,8 +108,8 @@ int main(int argc, char const *argv[])
     // for(auto p:word_count)
     //     cout << p.first << ":" << p.second << endl;
 
-    // set<string> exclude = {"The", "But", "And", "Or", "An", "A", 
-	//                        "the", "but", "and", "or", "an", "a"}; 
+    set<string> exclude = {"The", "But", "And", "Or", "An", "A", 
+	                       "the", "but", "and", "or", "an", "a"}; 
     // while (cin >> word)
     // {
     //     if(exclude.find(word)==exclude.end())
@@ -169,7 +204,7 @@ int main(int argc, char const *argv[])
     // add_word(language,"B");
     // for_each(language.begin(),language.end(),[](string word){cout << word << " ";});
 
-    word_line(string("word.txt"));
+    // word_line(string("word.txt"));
     
     // string line;
     // ifstream in("word.txt");
@@ -178,5 +213,61 @@ int main(int argc, char const *argv[])
     //     cout << line << endl;
     // }
     
+    // map<list<int>::iterator,int> m1;
+    // map<vector<int>::iterator,int> m2;
+    // std::vector<int> vi;
+    // m2.insert(std::pair<std::vector<int>::iterator, int>(vi.begin(), 0));
+
+    // but when using this one the compiler complained that
+    // error: no match for 'operator<' in '__x < __y'
+    // std::list<int> li;
+    // m1.insert(std::pair<std::list<int>::iterator, int>(li.begin(), 0));
+
+    // pair<string,int> psi;
+    // cout << psi.first << "-" << psi.second << endl;
+    // pair<string,string> pss{"cpp","primer"};
+    // cout << pss.first << "-" << pss.second << endl; 
+    // map<string,int> mii = {{"sd",2}};
+    // for(auto p:mii)
+    //     cout << p.first << "-" << p.second << endl;
+
+    // vp();
+
+    // map<string,vector<pair<string,int>>> families;
+    // add_child(families,string("彭"),string("X"),24);
+    // for(auto p:families)
+    // {
+    //     for(auto v:p.second)
+    //         cout << p.first << " " << v.first << " " << v.second << endl;
+    // }
+
+    // set<int>::key_type x;
+    // set<string>::key_type y;
+    // cout << x << endl;
+    // cout << y << endl;
+    map<string,int> info{{"p",12}};
+    auto map_it = info.begin();
+    cout << map_it->first << " " << (*map_it).second << endl;
+    map_it->second = 24;
+    cout << map_it->first << " " << map_it->second << endl;
+    
+    for(auto p:exclude)
+        cout << p << " ";
+    cout << endl;
+
+    for(auto p=exclude.cbegin();p!=exclude.cend();++p)
+        cout  << *p <<" ";
+    cout << endl;
+    map<string,int> my_language{{"c",0},{"java",1},{"python",2},{"c++",3}};
+    for(auto p:my_language)
+    	cout << p.first << " " << p.second << " ";
+    cout << endl;
+    for(auto p=my_language.cbegin();p!=my_language.cend();++p)
+    {
+        cout << (*p).first << " " << (*p).second << " ";
+        
+        cout << p->first << " " << p->second << " ";
+    }    
+        
     return 0;
 }

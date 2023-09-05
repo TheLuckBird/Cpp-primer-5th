@@ -3077,26 +3077,84 @@ while循环每次从标准输入读取一个单词。它使用每个单词对wor
 ```
     // bookstore 中多条记录可以有相同的ISBN
     // bookstore 中的元素以ISBN的顺序进行排列
-    multiset<Sales_ data, decltype (compareIsbn) *>bookstore (compareIsbn) ;
+    multiset<Sales_data, decltype (compareIsbn) *>bookstore (compareIsbn) ;
     
     typedef bool (*pf) (const Sales_ data &，const Sales_ data &) ;
-    multiset<Sales_ data, pf> bookstore (compareIsbn) ;
+    multiset<Sales_data, pf> bookstore (compareIsbn) ;
 
 ```
 我们使用decltype来指出自定义操作的类型，当用decltype来获得一个函数指针类型时，必须加上一个*来指出我们要使用一个给定函数类型的指针。用compareIsbn来初始化bookstore对象,这表示当我们向bookstore添加元素时，通过调用compareIsbn来为这些元素排序。即，bookstore 中的元素将按它们的ISBN成员的值排序。可以用compareIsbn代替&compareIsbn作为构造函数的参数
 
+名为pair的标准库类型，它定义在头文件utility中。  
+一个pair保存两个数据成员。类似容器，pair是一个用来生成特定类型的模板。当创建一个pair时，我们必须提供两个类型名，pair的数据成员将具有对应的类型。两个类型不要求一样:
 
+```
+    pair<string,int> psi;
+    cout << psi.first << "-" << psi.second << endl;
+    pair<string,string> pss{"cpp","primer"};
+    cout << pss.first << "-" << pss.second << endl;
+    map<string,int> mii = {{"sd",2}};
+    for(auto p:mii)
+        cout << p.first << "-" << p.second << endl;
 
+    pair的默认构造函数对数据成员进行初始化，也可以为每个成员提供初始化器。
 
+    与其他标准库类型不同，pair的数据成员是public的，两个成员分别命名为first和second。
+    我们用普通的成员访问符号来访问它们。
 
+    p是指向map中某个元素的引用。map的元素是pair。    
+```
+![Alt text](image-60.png)
 
+创建pair对象函数：  
+```
+    pair<string,int> process(vector<string> &v)
+    {
+        if(!v.empty())
+            //新标准下，可以对返回值进行列表初始化
+            return {v.back(),v.back().size()};
+            //旧版本，必须显示构造返回值
+            //return pair<string,int>(v.back(),v.back().size());
+            //也可以使用make_pair
+            //return (v.back(),v.back().size());
+        else
+            return pair<string,int> ();
+    }
+```
 
+### 11.3 关联容器操作
+![Alt text](image-61.png)
+只有map类型才定义了mapped_type  
+对于set类型，key_ type 和value_ type 是一样的; set中保存的值就是关键字。在一个map中，元素是关键字-值对。即，每个元素是一个pair对象，包含一个关键字和一个关联的值。由于我们不能改变一个元素的关键字，因此这些pair的关键字部分是const的:
+```
+    set<string>: :value_ type v1 ;// v1是一个string 
+    set<string>: :key_ type v2;// v2是一个string
+    map<string, int>: :value_ type v3; // v3是一个pair<const string, int>
+    map<string, int>: :key_ type v4; // v4是一个string
+    map<string, int>: :mapped_ type v5;// v5是一个int 
+```
+当解引用一个关联容器迭代器时，我们会得到一个类型为容器的value_type 的值的引用。对map而言，value_type 是一个pair类型，其first成员保存const的关键字，second成员保存值:
+```
+    map<string,int> info{{"p",12}};
+    auto map_it = info.begin();
+    cout << map_it->first << " " << (*map_it).second << endl;
+    map_it->second = 24;
+    cout << map_it->first << " " << map_it->second << endl;
+```
+虽然set类型同时定义了iterator 和const_ iterator 类型，但两种类型都只允许只读访问set中的元素。与不能改变一个map元素的关键字一样，一个set中的关键字也是const的。可以用一个set迭代器来读取元素的值，但不能修改:
 
-
-
-
-
-
+```
+    map<string,int> my_language{{"c",0},{"java",1},{"python",2},{"c++",3}};
+    for(auto p:my_language)
+    	cout << p.first << " " << p.second << " ";
+    cout << endl;
+    for(auto p=my_language.cbegin();p!=my_language.cend();++p)
+    {
+        cout << (*p).first << " " << (*p).second << " ";
+        
+        cout << p->first << " " << p->second << " ";
+    }  
+```
  
 
 
