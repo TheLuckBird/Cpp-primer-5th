@@ -99,6 +99,26 @@ void vp()
     
 }
 
+// void word_counter()
+// {
+//     map<string,int> word_count;
+//     string word;
+//     while (cin >> word)
+//     {
+//         // auto it = word_count.insert({word,1});
+//         pair<map<string,int>::iterator,bool> it = word_count.insert({word,1});
+//         if(!it.second)
+//         {
+//             // ++it.first->second;
+//             ++word_count[word];
+//         }    
+            
+//     }
+    
+//     for(auto p:word_count)
+//         cout << p.first << " " << p.second << endl;
+// }
+
 int main(int argc, char const *argv[])
 {
     // map<string,size_t> word_count;
@@ -108,8 +128,8 @@ int main(int argc, char const *argv[])
     // for(auto p:word_count)
     //     cout << p.first << ":" << p.second << endl;
 
-    set<string> exclude = {"The", "But", "And", "Or", "An", "A", 
-	                       "the", "but", "and", "or", "an", "a"}; 
+    // set<string> exclude = {"The", "But", "And", "Or", "An", "A", 
+	//                        "the", "but", "and", "or", "an", "a"}; 
     // while (cin >> word)
     // {
     //     if(exclude.find(word)==exclude.end())
@@ -245,29 +265,37 @@ int main(int argc, char const *argv[])
     // set<string>::key_type y;
     // cout << x << endl;
     // cout << y << endl;
-    map<string,int> info{{"p",12}};
-    auto map_it = info.begin();
-    cout << map_it->first << " " << (*map_it).second << endl;
-    map_it->second = 24;
-    cout << map_it->first << " " << map_it->second << endl;
+    // map<string,int> info{{"p",12}};
+    // auto map_it = info.begin();
+    // cout << map_it->first << " " << (*map_it).second << endl;
+    // map_it->second = 24;
+    // cout << map_it->first << " " << map_it->second << endl;
     
-    for(auto p:exclude)
-        cout << p << " ";
-    cout << endl;
+    // for(auto p:exclude)
+    //     cout << p << " ";
+    // cout << endl;
 
-    for(auto p=exclude.cbegin();p!=exclude.cend();++p)
-        cout  << *p <<" ";
-    cout << endl;
-    map<string,int> my_language{{"c",0},{"java",1},{"python",2},{"c++",3}};
-    for(auto p:my_language)
-    	cout << p.first << " " << p.second << " ";
-    cout << endl;
-    for(auto p=my_language.cbegin();p!=my_language.cend();++p)
-    {
-        cout << (*p).first << " " << (*p).second << " ";
+    // for(auto p=exclude.cbegin();p!=exclude.cend();++p)
+    //     cout  << *p <<" ";
+    // cout << endl;
+    // map<string,int> my_language{{"c",0},{"java",1},{"python",2},{"c++",3}};
+    // for(auto p:my_language)
+    // 	cout << p.first << " " << p.second << " ";
+    // cout << endl;
+    // for(auto p=my_language.cbegin();p!=my_language.cend();++p)
+    // {
+    //     cout << (*p).first << " " << (*p).second << " ";
         
-        cout << p->first << " " << p->second << " ";
-    }    
-        
+    //     cout << p->first << " " << p->second << " ";
+    // }    
+
+    // word_counter();
+
+    map<string,int> m;
+    m["cpp"];
+    cout << m["cpp"] << endl;
+    m["cpp"]=1;
+    cout << m["cpp"] << endl;
+    
     return 0;
 }

@@ -3155,22 +3155,119 @@ while循环每次从标准输入读取一个单词。它使用每个单词对wor
         cout << p->first << " " << p->second << " ";
     }  
 ```
- 
+关联容器的insert成员向容器中添加-一个元素或一个元素范围。由于map和set (以及对应的无序类型)包含不重复的关键字，因此插入一个已关联容器存在的元素对容器没有任何影响:
+```
+    vector<int> ivec = {2,4,6,8,2,4,6,8};
+    // ivec 有8个元素
+    set<int> set2;
+    //空集合.
+    set2. insert (ivec. cbegin(), ivec.cend()) ;
+    //set2有4个元素
+    set2. insert({1,3,5, 7,1,3,5,7}) ;
+    // set2现在有8个元素
+```
+insert有两个版本，分别接受一对迭代器，或是一个初始化器列表，这两个版本的行为类似对应的构造函数一对于一个给定的关键字，只有第一个带此关键字的元素才被插入到容器中。
 
+对一个map进行insert操作时，必须记住元素类型是pair。通常，对于想要插入的数据，并没有一不现成的pair对象。可以在insert的参数列表中创建一个pair:
+```
+    //向word_count插入word的4种方法
+    word_ count. insert ({word, 1}) ;
+    word_ count. insert (make_pair (word, 1)) ;
+    word_ count. insert (pair<string, size_t> (word, 1) ) ;
+    word_ count. insert (map<string，size_t>: :value_type (word, 1)) ;
+```
+![Alt text](image-62.png)
+insest (或emplace)返回的值依赖于容器类型和参数。对于不包含重复关键字的容器，添加单一元素的insert和emplace版本返回一个pair,告诉我们插入操作是否成功。pair的first成员是一个迭代器，指向具有给定关键字的元素; second 成员是一个bool值，指出元素是插入成功还是已经存在于容器中。如果关键字已在容器中，则insert什么事情也不做，且返回值中的bool部分为false.如果关键字不存在，元素被插入容器中，且bool值为true。
+```
+    void word_counter()
+    {
+        map<string,int> word_count;
+        string word;
+        while (cin >> word)
+        {
+            // auto it = word_count.insert({word,1});
+            pair<map<string,int>::iterator,bool> it = word_count.insert({word,1});
+            if(!it.second)
+                ++it.first->second;
+                //++word_count[word];
+        }
+        
+        for(auto p:word_count)
+            cout << p.first << " " << p.second << endl;
+    }
+```
 
+关联容器定义了三个版本的erase，与顺序容器一样， 我们可以通过传递给erase一个迭代器或一个迭代器对来删除一个元素或者一个元素范围。这两个版本的erase与对应的顺序容器的操作非常相似:指定的元素被删除，函数返回void.
 
+关联容器提供一个额外的erase操作，它接受一个key_type 参数。此版本删除所有匹配给定关键子的元素(如果存在的话)，返回实际删除的元素的数量。我们可以用此版本在打印结果之前从word_count中删除一个特定的单词:
 
+![Alt text](image-63.png)
 
+map和unordered map
+容器提供了下标运算符和一个对应的at函数,set类型不支持下标，因为set中没有与关键字相关联的“值”。元素本身就是关键字，因此“获取与一个关键字相关联的值”的操作就没有意了我们不能对一个multimap或一个unordered_multimap 进行下标操作，因为这些容器中可能有多个值与一个关键字相关联。
 
+类似我们用过的其他下标运算符，map下标运算符接受一个索引(即，一个关键字)，获取与此关键字相关联的值。但是，与其他下标运算符不同的是，如果关键字并不在map中，会为它创建一个元素并插入到map中，关联值将进行值初始化。
+```
+    map<string,int> m;//空map
+    m["cpp"];//下标操作插入"cpp"关键字
+    cout << m["cpp"] << endl;
+    m["cpp"]=1;//使用下标查找"cpp",提出其值0，然后赋值为1
+    cout << m["cpp"] << endl;
+```
+通常情况下，解引用一个迭代器所返回的类型与下标运算符返回的类型是一样的。 但对map则不然:当对一个map进行下标操作时，会获得一个mapped_ type对象;但当解引用一个map迭代器时，会得到一一个value_ type对象。
+与其他下标运算符相同的是，map的下标运算符返回一个左值由于返回的是一个左值，所以我们既可以读也可以写元素:`m["cpp"]=1;`
 
+关联容器提供多种查找一个指定元素的方法，应该使用哪个操作依赖于我们要解决什么问题。如果我们所关心的只不过是一个特定元素是否已在容器中，可能find是最佳选择。对于不允许重复关键字的容器，可能使用find还是count没什么区别。但对于允许重复关键字的容器，count还会做更多的工作:如果元素在容器中，它还会统计有多少个元素有相同的关键字。如果不需要计数，最好使用find:
+```
+    set<int> iset = {0,1,2,3,4,5,6,7,8,9};
+    iset. find(1) ;
+    //返回一个迭代器，指向key == 1的元素
+    iset. find(11); // 返回一个迭代器，其值等于iset.end ()
+    iset. count(1); // 返回1
+    iset.count(11); // 返回0
+```
+![Alt text](image-64.png)
+![Alt text](image-65.png)
 
+对map和nordered_map 米刑、下标运算符提供了最简单的提取元素的方法。但是，如我们所见，使用下标操作有一:个 严重的副作用。如果关键字还未在map中、下标操作会插入-个具有给定关键字的元素。这种行为是否正确完全依赖于我们的预期是什么。
 
+我们只是想知道一个给定关键字是否在map中，而不想改变map。在这种情况下，应该使用find:
 
+如果一个multimap或multiset中有多个元素具有给定关键字，则这些元素在容器中会相邻存储。  
+给定一个从作者到著作题目的映射，最直观的方法是使用find和
+count:
+```
+    string search_ item("Alain de Botton") ;
+    //要查找的作者
+    auto entries = authors.count (search_ item) ;
+    //元素的数量
+    auto iter = authors. find (search item) ;
+    //此作者的第一本书
+    //用一个循环查找此作者的所有著作
+    while (entries) 
+    {
+        cout << iter->second << endl;
+        //打印每个题目
+        ++iter;
+        //前进到下一本书
+        --entries;
+        //记录已经打印了多少本书
+    }
+```
+一种不同的，面向迭代器的解决方法  
+如果关键字在容器中，lower_bound返回的迭代器将指向第一个具有给定关键字的元素，而upper_bound返回的迭代器则指向最后一个匹配给定关键字的元素之后的位置。如果元素不在multimap中，则lower_ bound和upper_bound会返回相等的迭代器一指 向一个不影响排序的关键字插入位置。因此,
+用相同的关键字调用lower_ bound 和upper_ bound 会得到一个迭代器范围,表示所有具有该关键字的元素的范围。
 
+当然，这两个操作返回的迭代器可能是容器的尾后迭代器。如果我们查找的元素具有容器中最大的关键字，则此关键字的upper_bound 返回尾后迭代器。如果关键字不存在，
+且大于容器中任何关键字，则lower_bound 返回的也是尾后迭代器。
+```
+    //beg和end表示对应此作者的元素的范围,与find、count效果一样但更直接
+    for (auto beg = authors. lower_ bound (search_ item) ，
+    end = authors.upper_ bound(search_ item) ;
+    beg != end; ++beg)
+    cout << beg->second << endl; // 打印每个题目
 
-
-
-
+```
 
 
 
