@@ -119,6 +119,48 @@ void vp()
 //         cout << p.first << " " << p.second << endl;
 // }
 
+auto build_map(string rule_file)
+{
+    ifstream in(rule_file);
+    map<string,string> rule_map;
+    string s1,s2;
+    while(in >> s1&&getline(in,s2))
+    {
+        if(s2.size()>1)
+            rule_map[s1]=s2.substr(1);
+        else
+            throw runtime_error("no rule" + s1);
+    }
+    return rule_map;
+}
+
+auto transform(string s,map<string,string> &rule_map)
+{
+    auto v = rule_map.find(s);
+    if(v!=rule_map.end())
+        return v->second;
+    else
+        return s;
+}
+
+auto word_transform(string rule_file,string input)
+{
+    ifstream in(input);
+    string line;
+    string word;
+    map<string,string> rule_map = build_map(rule_file);
+    while (getline(in,line))//?为什么多个分号;
+    {
+        istringstream sin(line);
+        while (sin >> word)
+        {
+            cout << transform(word,rule_map) << " ";
+        }
+        cout << endl;
+    }
+}
+
+
 int main(int argc, char const *argv[])
 {
     // map<string,size_t> word_count;
@@ -297,15 +339,24 @@ int main(int argc, char const *argv[])
     // m["cpp"]=1;
     // cout << m["cpp"] << endl;
     
-    multimap<string,string> authors;
-    authors.insert({"Alain de Botton", "On Love"});
-    authors.insert({"Alain de Botton", "Status Anxiety"});
-    authors.insert({"Alain de Botton", "Art of Travel"});
-    authors.insert({"Alain de Botton", "Architecture of Happiness"});
-    authors.insert({"pfh","cpp"});
+    // multimap<string,string> authors;
+    // authors.insert({"Alain,de,Botton", "On Love"});
+    // authors.insert({"pfh","cpp"});
 
-    string author;
-    cin >> author;
-    authors.find(author);
+    // for(auto p:authors)
+    //     cout << p.first << " " << p.second << endl;
+    // string author;
+    // cout << "输入删除的信息：" << endl;
+    // cin >> author;
+    // if(authors.find(author)==authors.end())
+    //     cout << "no key" << endl;
+    // else
+    //     authors.erase(author);
+    
+    // for(auto p:authors)
+    //     cout << p.first << " " << p.second << endl;
+    // string s1{"rules"};
+    // string s2{"text"};
+    // word_transform(s1,s2);
     return 0;
 }
