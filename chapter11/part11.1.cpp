@@ -291,11 +291,21 @@ int main(int argc, char const *argv[])
 
     // word_counter();
 
-    map<string,int> m;
-    m["cpp"];
-    cout << m["cpp"] << endl;
-    m["cpp"]=1;
-    cout << m["cpp"] << endl;
+    // map<string,int> m;
+    // m["cpp"];
+    // cout << m["cpp"] << endl;
+    // m["cpp"]=1;
+    // cout << m["cpp"] << endl;
     
+    multimap<string,string> authors;
+    authors.insert({"Alain de Botton", "On Love"});
+    authors.insert({"Alain de Botton", "Status Anxiety"});
+    authors.insert({"Alain de Botton", "Art of Travel"});
+    authors.insert({"Alain de Botton", "Architecture of Happiness"});
+    authors.insert({"pfh","cpp"});
+
+    string author;
+    cin >> author;
+    authors.find(author);
     return 0;
 }
