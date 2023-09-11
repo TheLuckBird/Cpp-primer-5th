@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include "StrBlob.h"
 
 using namespace std;
@@ -33,6 +35,40 @@ auto print(shared_ptr<vector<int>> p)
     // p = nullptr;
 }
 
+struct connection {
+    std::string ip;
+    int port;
+    connection(std::string ip_, int port_):ip(ip_), port(port_){ }
+};
+struct destination {
+    std::string ip;
+    int port;
+    destination(std::string ip_, int port_):ip(ip_), port(port_){ }
+};
+
+connection connect(destination* pDest)
+{
+    std::shared_ptr<connection> pConn(new connection(pDest->ip, pDest->port));
+    std::cout << "creating connection(" << pConn.use_count() << ")" << std::endl;
+    return *pConn;
+}
+
+void disconnect(connection pConn)
+{
+    std::cout << "connection close(" << pConn.ip << ":" << pConn.port << ")" << std::endl;
+}
+
+void end_connection(connection *pConn)
+{
+    disconnect(*pConn);
+}
+
+void f(destination &d)
+{
+    connection conn = connect(&d);
+    std::shared_ptr<connection> p(&conn, end_connection);
+    std::cout << "connecting now(" << p.use_count() << ")" << std::endl;
+}
 
 int main(int argc, char const *argv[])
 {
@@ -88,14 +124,37 @@ int main(int argc, char const *argv[])
     // // p = new int();
     // p.reset(new int(10));
 
-    shared_ptr<string> p(new string("Hello!"));
-	// shared_ptr<string> p2(p);    // two users of the allocated string
-	string newVal;
-	if (!p.unique())
-		p.reset(new string(*p)); // we aren't alone; allocate a new copy
-	*p += newVal; // now that we know we're the only pointer, okay to change this object 
-	// cout << *p << " " << *p2 << endl;
-    cout << *p << endl;
+    // shared_ptr<string> p(new string("Hello!"));
+	// // shared_ptr<string> p2(p);    // two users of the allocated string
+	// string newVal;
+	// if (!p.unique())
+	// 	p.reset(new string(*p)); // we aren't alone; allocate a new copy
+	// *p += newVal; // now that we know we're the only pointer, okay to change this object 
+	// // cout << *p << " " << *p2 << endl;
+    // cout << *p << endl;
+
+    // destination dest("202.118.176.67", 3316);
+    // f(dest);
+
+    // unique_ptr<string> ups (new string("coo"));
+    // unique_ptr<string> p(ups);
+    // unique_ptr<string> p1 = ups;
+
+    fstream fin("word.txt");
+    StrBlob s;
+    // StrBlobPtr sp(s);
+    string line;
+
+    while(getline(fin,line))
+    {
+        s.push_back(line);
+    }
+
+    for(auto it=s.begin();neq(it,s.end());it.incr())
+    {
+        cout << it.deref() << endl;
+    }
+
     return 0;
 }
 

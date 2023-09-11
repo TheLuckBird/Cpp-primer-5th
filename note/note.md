@@ -3692,10 +3692,220 @@ get用来将指针的访问权限传递给代码、你只有在确定代码不�
 ```
 如果在new和delete之间发生异常，且异常未在f中被捕获，则内存就永远不会被释放了。在函数f之外没有指针指向这块内存，因此就无法释放它了。
 
+包括所有标准库类在内的很多C++类都定义了析构函数，负责清理对象使用的资源。但是，不是所有的类都是这样良好定义的。特别是那些为C和C++两种语言设计的类，通常都要求用户显式地释放所使用的任何资源。
 
+那些分配了资源，而又没有定义析构函数来释放这些资源的类，可能会遇到与使用动态内存相同的错误一-程序员非常容易忘记释放资源。类似的，如果在资源分配和释放之间发生了异常，程序也会发生资源泄漏。
 
+与管理动态内存类似，我们通常可以使用类似的技术来管理不具有良好定义的析构函数的类：智能指针
 
+```
+    struct destination;
+    //表示我们正在连接什么
+    struct connection;
+    //使用连接所需的信息
+    connection connect (destination*) ;
+    //打开连接
+    void di sconnect (connection) ;
+    //关闭给定的连接
+    void f (destination &d /*其他参数*/)
+    {
+    //获得一个连接;记住使用完后要关闭它
+    connection C = connect (&d) ;
+    //使用连接
+    //如果我们在f退出前忘记调用disconnect，就无法关闭c了
+    }
+```
+如果connection有一个析构函数，就可以在f结束时由析构函数自动关闭连接。但是，connection没有析构函数。这个问题与我们上一个程序中使用shared ptr避免内存泄漏几乎是等价的。使用shared_ptr 来保证connection被正确关闭，已被证明是一
+种有效的方法。
 
+使用我们自己的释放操作:  
+默认情况下，shared_ptr 假定它们指向的是动态内存。因此，当一个shared_ptr被销毁时，它默认地对它管理的指针进行delete操作。为了用shared ptr来管理一个conrection,我们必须首先定义-一个函数来代替delete.这个删除器( deleter)函数必须能够完成对shared ptr中保存的指针进行释放的操作。在本例中，我们的删除器必须接受单个类型为connection*的参数:
+```
+    void end_ connection (connection *p) { disconnect(*p) ; }
+```
+当我们创建一一个shared_ ptr时，可以传递一个(可选的)指向删除器函数的参数
+```
+    void f (destination &d /*其他参数*/)
+    {
+        connection C = connect (&d) ;
+        shared_ ptr<connection> p(&C，end_ connection) ;
+        //使用连接
+        //当f退出时(即使是由于异常而退出), connection会被正确关闭
+    }
+```
+当p被销毁时，它不会对自己保存的指针执行delete，而是调用end_connection.接下来，end_connection 会调用disconnect，从而确保连接被关闭。如果f正常退出，那么p的销毁会作为结束处理的一部分。如果发生了异常，p同样会被销毁，从而连接被关闭。
+
+智能指针陷阱:  
+智能指针可以提供对动态分配的内存安全而又方便的管理，但这建立在正确使用的前提下。为了正确使用智能指针，我们必须坚持一些基本规范:
+
+●不使用相同的内置指针值初始化(或reset)多个智能指针。  
+●不delete get()返 回的指针。  
+●不使用 get()初始化或reset另一个智能指针。  
+●如果你使用get()返回的指针，记住当最后一个对应的智能指针销毁后，你的指针就变为无效了。  
+●如果你使用智能指针管理的资源不是new分配的内存，记住传递给它一个删除器。  
+
+一个unique_ptr “拥有”它所指向的对象。与shared_ ptr不同，某个时刻只能有一个unique_ptr 指向一个给定对象。当unique_ptr 被销段时，它所指向的对象也被销毁。
+
+与shared_ptr不同，没有类似make_shared 的标准库函数返回一个unique_ptr。当我们定义一个unique_ptr 时，需要将其绑定到一个new返回的指针上。类似shared_ ptr，初始化unique_ptr必须采用直接初始化形式
+```
+    unique_ _ptr<double> p1; //可以指向一个double的unique_ ptr
+    unique_ ptr<int> p2(new int(42)); // p2指向一个值为42的int
+```
+由于一个unique_pt 拥有它指向的对象,因此unique_ptr不支持普通的拷贝或赋值操作:
+```
+    unique_ ptr<string> p1 (new string ("Stegosaurus")) ;
+    unique_ ptr<string> p2(p1); // 错误: unique_ ptr 不支持拷贝
+    unique_ ptr<string> p3;
+    p3 = p2;
+    //错误: unique_ ptr不支持赋值
+```
+![Alt text](image-72.png)
+
+虽然我们不能拷贝或赋值unique_ptr,但可以通过调用release或reset将指针的所有权从一个(非const) unique_ptr转移给另一个unique:
+```
+    //将所有权从p1 (指向string Stegosaurus) 转移给p2
+    unique_ ptr<string> p2(p1.release()); // release 将p1置为空
+    unique_ ptr<string> p3 (new string("Trex")) ;
+    //将所有权从p3转移给p2
+    p2. reset (p3. release()); // reset 释放了p2原来指向的内存
+```
+release成员返回unique_ptr 当前保存的指针并将其置为空。因此，p2被初始化为p1原来保存的指针，而p1被置为空。
+
+reset成员接受一个可选的指针参数，令unique_ptr重新指向给定的指针。如果unique_ptr不为空，它原来指向的对象被释放。因此，对p2调用reset释放了用"Stegosaurus"初始化的string所使用的内存，将p3对指针的所有权转移给p2，并将p3置为空。
+
+调用release会切断unique_ptr 和它原来管理的对象间的联系。release 返回的指针通常被用来初始化另一个智能指针或给另一个智能指针赋值。在本例中，管理内存的责任简单地从一个智能指针转移给另一个。但是，如果我们不用另一个智能指针来保存release返回的指针，我们的程序就要负责资源的释放:
+```
+    p2. release() ;
+    //错误: p2不会释放内存。而且我们丢失了指针
+    auto P = p2. release () ;
+    //正确，但我们必须记得delete (p)
+```
+传递unique_ptr 参数和返回unique_ptr:  
+不能拷贝unique_ptr 的规则有一个例外:我们可以拷贝或赋值-一个将要被销毁的unique_ptr。 最常见的例子是从函数返回一个unique ptr:
+```
+    unique_ ptr<int> clone(int p) {
+    //正确:从int*创建一个unique_ ptr<int>
+    return unique_ ptr<int> (new int(p)) ;
+    }
+    //还可以返回一个局部对象的拷贝:
+    unique_ ptr<int> clone(int p) {
+    unique_ ptr<int> ret (new int (p) ) ;
+    return ret;
+    }
+```
+向unique_ptr传递删除器：
+unique_ ptr 默认情况下用delete 释放它指向的对象，我们可以重载一个unique ptr 中默认的删除器,但是，unique_ ptr 管理删除器的方式与shared_ptr不同。
+
+重载一个unique_ptr 中的删除器会影响到unique_ ptr类型以及如何构造(或reset)该类型的对象，我们必须在尖括号中unique_ptr指向类型之后提供删除器类型。在创建或reset一个这种unique_ptr 类型的对象时，必须提供一个指定类型的可调用对象(删除器):
+```
+    // p指向一个类型为objT的对象，并使用一个类型为delT的对象释放objT对象
+    //它会调用一个名为fcn的delT类型对象
+    unique_ptr<objT， delT> P (new objT, fcn) ;
+```
+作为-“个更具体的例子，我们将重写连接程序，用unique_ptr来代替shared ptr
+
+```
+    void f (destination &d /*其他需要的参数*/)
+    connection c = connect(&d); // 打开连接
+    //当p被销毁时，连接将会关闭.
+    unique_ptr<connection, decltype (end_ connection) *>
+    P(&C，end_connection) ;
+    //使用连接
+    //当f退出时(即使是由于异常而退出)，connection会被正确关闭
+```
+weak_ptr是一种不控制所指向对象生存期的智能指针，它指向由一个shared_ptr管理的对象。将一个weak_ptr绑定到一个shared_ptr不会改变shared_ptr的引用计数。一旦最后一个指问对象的shared_ptr 被销毁，对象就会被释放。即使有weak_ ptr指向对象，对象也还是会被释放，因此，weak_ptr的名字抓
+住了这种智能指针“弱”共享对象的特点。
+![Alt text](image-73.png)
+
+当我们创建一个weak_ptr时，要用一个shared_ptr来初始化它:
+```
+    auto p = make_ shared<int> (42) ;
+    weak_ ptr<int> wp(p); // wp 弱共享p; p的引用计数未改变
+```
+由于对象可能不存在，我们不能使用weak_ptr直接访问对象，而必须调用lock。此函数检查weak_ptr指向的对象是否仍存在。如果存在，lock返回一个指向共享对象的shared _ptr。
+```
+    if (shared_ ptr<int> np = wp.1ock()) { //如果np不为空则条件成立
+    //在if中，np与p共享对象
+    }
+```
+在这段代码中，只有当lock调用返回true时我们才会进入if语句体。在if中，使用np访问共享对象是安全的。
+
+### 12.2 动态数组
+new和delete运算符一次分配/释放一个对象，但某些应用需要一次为很多对象分配内存的功能。为了支持这种需求，C++语言和标准库提供了两种一次分配一个对象数组的方法。C++语言定义了另一种new表达式语法，可以分配并初始化一个对象数组。标准库中包含一个名为allocator的类，允许我们将分配和初始化分离。
+
+大多数应用应该使用标准库容器而不是动太分配的数组。使用容器更为简单更不容易出现内存管理错误并且可能有更好的性能。
+使用容器的类可以使用默认版本的拷贝、赋值和析构操作，分配动态数组的类则必须定义自己版本的操作，在拷贝、复制以及销毁对象时管理所关联的内存。
+
+为了让new分配-一个对象数组，我们要在类型名之后跟一对方括号，在其中指明要分配的对象的数目，返回指向第一个对象的指针:
+```
+    //调用get_ size确定分配多少个int
+    int *pia = new int[get_ size()]; // pia 指向第一个int 
+```
+也可以用一个表示数组类型的类型别名(参见2.5.1 节，第60页)来分配一个数组，这样，new表达式中就不需要方括号了:
+```
+    typedef int arrT[42]; // arrT 表示42个int的数组类型
+    int *p = new arrT;
+    //分配一个42个int的数组; p指向第一个int
+```
+由于分配的内存并不是一个数组类型，因此不能对动态数组调用begin或end。出于相同的原因，也不能用范围for语句来处理
+(所谓的)动态数组中的元素。
+
+默认情况下，new分配的对象，不管是单个分配的还是数组中的，都是默认初始化的。
+
+可以对数组中的元素进行值初始化，方法是在大小之后跟一对
+空括号。
+```
+    int *pia = new int[10] ;
+    // 10个未初始化的int
+    int *pia2 = new int[10] () ;
+    // 10个值初始化为0的int
+    string *psa = new string[10] ;
+    // 10个空string
+    string *psa2 = new string[10] (); // 10 个空string
+```
+在新标准中，我们还可以提供一个元素初始化器的花括号列表:
+```
+    //10个int分别用列表中对应的初始化器初始化
+    int *pia3 = new int[10] {0,1,2,3,4,5,6, 7,8,9};
+    //10个string，前4个用给定的初始化器初始化，剩余的进行值初始化
+    string *psa3 = new string[10]{"a", "an", "the", string(3,'x') };
+```
+如果初始化器数目大于元素数目，则new表达式失败，不会分配任何内存。
+
+虽然我们用空括号对数组中元素进行值初始化，但不能在括号中给出初始化器，这意味着不能用auto分配数组。
+```
+    int *fp = new int[2](1，2);//错
+```
+可以用任意表达式来确定要分配的对象的数目:
+```
+    size_ t n = get_ size() ;
+    // get_ size返回需要的元素的数目
+    int* P = new int[n];
+    //分配数组保存元素
+    for(int*q=P;q!=P+n;++q)
+    /*处理数组*/ ;
+```
+虽然我们不能创建一一个大小为0的静态数组对象，但当n等于0时，调用new[n]是合法的:
+```
+    char arr[0] ;
+    //错误:不能定义长度为0的数组
+    char *cp = new char[0] ;
+    //正确:但cp不能解引用.
+```
+当我们用new分配-一个大小为0的数组时，new返回一个合法的非空指针。此指针保证与new返回的其他任何指针都不相同。此指针不能解引用毕竞它不指向任何元素。
+
+为了释放动态数组，我们使用一种特殊形式的delete-在指针前加 上一个空方括号对:
+```
+    delete p;
+    // p必须指向一个动态分配的对象或为空
+    delete [] pa;
+    //pa必须指向一个动态分配的数组或为空
+```
+
+数组中的元素按逆序销毁,即，最后一个元素首先被销毁，然后是倒数第二个，依此类推。
+当我们释放一个指向数组的指针时，空方括号对是必需的:它指示编译器此指针指向一个对象数组的第-一个元素。如果我们在delete一个指向数组的指针时忽略了方括号
+(或者在delete一个指向单一对象的指针时使用了方括号)，其行为是未定义的。编译器很可能不会给出警告。我们的程序可能在
+执行过程中在没有任何警告的情况下行为异常。
 
 
 
