@@ -11,7 +11,7 @@ int main(int argc, char const *argv[])
     TextQuery q1(file);
     q1.word_query();
     q1.print();
-    q1.show(string("is"));
+    q1.show(string("guygdfu"));
     
 
     // map<string,set<int>> word_map;

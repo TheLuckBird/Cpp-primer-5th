@@ -59,21 +59,27 @@ auto TextQuery::show(string s)
 {
     vector<int> ivec;
     for (const auto& entry : word_map) {
-        std::cout << entry.first << "出现次数: " << entry.second.size() << endl;
-        
         for (const auto& number : entry.second) {
             ivec.push_back(number);
         }
         unique(ivec.begin(),ivec.end());
-        for(auto p:ivec)
-        {
-            cout << "(line " << p+1 <<") " << text[p] << endl;
-        }
-        std::cout << std::endl;
     }
 
-    auto p = find(ivec.begin(),ivec.end(),s);
-    cout << "(line " << 3 <<") " << text[3] << endl;
+    auto answer = word_map.find(s);
+    if(answer == word_map.end())
+        throw out_of_range("未找到");
+    auto lines = answer->second;
+    vector<int> line;
+    for (const auto& number : lines ){
+            line.push_back(number);
+    }
+    cout << s << "出现的次数" << line.size() << endl;
+    unique(line.begin(),line.end());
+    for(auto p:line)
+    {
+        cout <<'\t' << "(line " << p+1 <<") " << text[p] << endl;
+    }
+    std::cout << std::endl;
 }
 
 #endif
