@@ -2,6 +2,7 @@
 #include "Foo.h"
 #include "Numbered.h"
 #include "Employee.h"
+#include "HasPtr.h"
 
 using namespace std;
 
@@ -29,16 +30,26 @@ int main(int argc, char const *argv[])
     // Numbered a,b=a,c=b;
     // f(a);f(b);f(c);
 
-    Employee a("cpp"),b("java"),c("C");
+    // Employee a("cpp"),b("java"),c("C");
+    // a.print();
+    // b.print();
+    // c.print();
+
+    // Employee d(a);
+    // d.print();
+
+    // Employee e = b;
+    // e.print();
+
+    HasPtr a("cpp");
     a.print();
+    HasPtr b;
+    b=a;
     b.print();
-    c.print();
 
-    Employee d(a);
-    d.print();
+    b = b;
+    // b = "cpp";
 
-    Employee e = b;
-    e.print();
-
+    // cout << sizeof(string) << " " << sizeof(int);
     return 0;
 }

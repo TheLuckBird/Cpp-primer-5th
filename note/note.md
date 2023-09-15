@@ -4275,16 +4275,168 @@ Sales_data& Sales_data: :operator= (const Sales_data&) = default;
 本质上，当不可能拷贝、赋值或销毁类的成员时，类的合成拷贝控制成员就被定义为删除的。
 
 ### 13.2 拷贝控制和资源管理
+通常，管理类外资源的类必须定义拷贝控制成员。为了定义这些成员，我们首先必须确定此类型对象的拷贝语义。一般来说，有两种选择:可以定义拷贝操作，使类的行为看起来像一个值或者像一个指针。
+
+类的行为像一个值，当我们拷一个像值的对象时，副本和原对象是完全独立的。
+
+行为像指针的类则共享状态，改变副本也会改变原对象，反之亦然。
+
+在我们使用过的标准库类中，标准库容器和string类的行为像一个值。而不出意外的，shared_ ptr类提供类似指针的行为，I0类型和unique_ptr不允许拷贝或赋值，因此它们的行为既不像值也不像指针。
+
+行为像值的类：  
+为了提供类值的行为，对于类管理的资源，每个对象都应该拥有一份自己的拷贝。这意味着对于ps指向的string，每个HasPtr对象都必须有自己的拷贝。为了实现类值行为，HasPtr需要
+●定义一个拷贝构造函数，完成string的拷贝，而不是拷贝指针  
+●定义一个析构函数来释放string   
+●定义一个拷贝赋值运算符来释放对象当前的string,并从右侧运算对象拷贝string  
+```
+class HasPtr
+{
+public:
+    HasPtr(const string &);
+    HasPtr(HasPtr &);
+    HasPtr& operator=(const HasPtr &); 
+    ~HasPtr();
+    auto print();
 
 
+private:
+    string *ps;
+    int v;
 
+};
 
+HasPtr::HasPtr(const string &s=string()):ps(new string(s)),v(0){}
+HasPtr::HasPtr(HasPtr &h):ps(new string(*(h.ps)) ),v(h.v){}
+HasPtr& HasPtr::operator=(const HasPtr &h)
+{
+    auto newp = new string(*h.ps);//拷贝底层string
+    delete ps;
+    ps = newp;
+    v = h.v;
+    return *this;
+}
+HasPtr::~HasPtr(){delete ps;}
+auto HasPtr::print()
+{
+    std::cout << ps << " " << v << endl;
+}
+```
+第一个构造函数接受一个(可选的)string参数。这个构造函数动态分配它自己的string副本，并将指向string的指针保存在ps中。拷贝构造函数也分配它自己的string副本。析构函数对指针成员ps执行delete,释放构造函数中分配的内存。
 
+类值拷贝赋值运算符  
+赋值运算符通常组合了析构函数和构造函数的操作。类似析构函数，赋值操作会销毁左侧运算对象的资源。类似拷贝构造函数，赋值操作会从右侧运算对象拷贝数据。非常重要的一点是，这些操作是以正确的顺序执行的，即使将一个对象赋予它自身，也保.
+证正确。而且，如果可能，我们编写的赋值运算符还应该是异常安全的一当 异常发生时能将左侧运算对象置于一个有意义的状态
+```
+HasPtr& HasPtr::operator=(const HasPtr &h)
+{
+    auto newp = new string(*h.ps);//拷贝底层string
+    delete ps;//释放旧内存
+    ps = newp;//从右侧运算对象拷贝数据到本对象
+    v = h.v;
+    return *this;//返回本对象
+}
+```
+当你编与赋值还算行时  
+●如果将一个对象赋予它自身，赋值运算符必须能正确工作。  
+●大多数赋值运算符组合了析构函数和拷贝构造函数的工作。 
 
+一个好的模式是先将右侧运算对象拷贝到一个局部临时对象中。当拷贝完成后，销毁左侧运算对象的现有成员就是安全的了。一旦左侧运算对象的资源被销毁，就只剩下将数据从临时对象拷贝到左侧运算对象的成员中了。
 
+```
+//这样编写赋值运算符是错误的!
+HasPtr& HasPtr::operator= (const HasPtr &rhs){
+delete ps; // 释放对象指向的string
+//如果rhs和*this是同一个对象，我们就将从已释放的内存中拷贝数据!
+ps = new string(* (rhs.ps)) ;
+i = rhs.i;
+return *this;
+}
+```
+如果rhs和本对象是同一一个对象，delete ps会释放*this和rhs指向的string。接
+下来，当我们在new表达式中试图拷贝* (rhs.ps)时，就会访问一个指向无效内存的指
+针，其行为和结果是未定义的。
 
+对于行为类似指针的类，我们需要为其定义拷贝构造函数和拷贝赋值运算符，来拷贝
+指针成员本身而不是它指向的string。我们的类仍然需要自己的析构函数来释放接受
+string参数的构造函数分配的内存。
 
+令一个类展现类似指针的行为的最好方法是使用shared_ptr来管理类中的资源。拷贝(或赋值)一个shared_ptr会拷贝(赋值) shared_ptr 所指向的指针。shared_ptr 类自己记录有多少用户共享它所指向的对象。当没有用户使用对象时，shared_ptr类负责释放资源。
 
+有时我们希望直接管理资源。在这种情况下，使用引用计数(reference count)就很有用了。
+
+引用计数的工作方式如下:  
+●除了初始化对象外，每个构造函数(拷贝构造函数除外)还要创建一个引用计数，
+用来记录有多少对象与正在创建的对象共享状态。当我们创建一个对象时，只有一
+个对象共享状态，因此将计数器初始化为1  
+●拷贝构造函数不分配新的计数器，而是拷贝给定对象的数据成员，包括计数器。拷
+贝构造函数递增共享的计数器，指出给定对象的状态又被一个新用户所共享。  
+●析构函数递减计数器，指出共享状态的用户少了一个。如果计数器变为0， 则析构
+函数释放状态。  
+●拷贝赋值运算符递增右侧运算对象的计数器，递减左侧运算对象的计数器。如果左
+侧运算对象的计数器变为0,意味着它的共享状态没有用户了，拷贝赋值运算符就
+必须销毁状态。  
+唯一的难题是确定在哪里存放引用计数。计数器不能直接作为HasPtr对象的成员。
+```
+    HasPtr p1 ("Hiya!") ;
+    HasPtr p2(p1); // p1和p2指向相同的string :
+    HasPtr p3(p1); // p1、p2和p3都指向相同的string
+```
+如果引用计数保存在每个对象中，当创建p3时我们应该如何正确更新它呢?可以递增pl
+中的计数器并将其拷贝到p3中，但如何更新p2中的计数器呢?
+
+解决此问题的一种方法是将计数器保存在动态内存中。当创建一个对象时，我们也分
+配一个新的计数器。当拷贝或赋值对象时，我们拷贝指向计数器的指针。使用这种方法，
+副本和原对象都会指向相同的计数器。
+
+通过使用引用计数，我们就可以编写类指针的HasPtr版本了:
+```
+class HasPtr {
+public:
+    //构造函数分配新的string和新的计数器，将计数器置为1
+    HasPtr (const std: :string &S = std: :string() ) :
+    ps(new std: :string(s))，i(0)， use (new std: :size_ t(1)) {}
+    //拷贝构造函数拷贝所有三个数据成员，并递增计数器
+    HasPtr (const HasPtr &p) :
+    ps(p.ps)，i(p.i), use(p.use) { ++*use; }
+    HasPtr& operator= (const HasPtr&) ;
+    ~HasPtr() ;
+private:
+    std: :string *ps;
+    int i;
+    std::size_ t *use; //用来记录有多少个对象共享*ps的成员
+}
+```
+
+在此，我们添加了一个名为use的数据成员，它记录有多少对象共享相同的string。接
+受string参数的构造函数分配新的计数器，并将其初始化为1，指出当前有一个用户使
+用本对象的string成员。
+
+```
+HasPtr::~HasPtr()
+{
+    if(--*use == 0)
+    {
+        delete ps;
+        delete use;
+    }
+}
+```
+
+```
+HasPtr& HasPtr::operator=(const HasPtr &h)
+{
+    ++*h.use;
+    if(--*use)
+    {
+        delete ps;
+        delete use;
+    }
+    ps = h.ps;
+    v = h.v;
+    use = h.use;
+    return *this;//返回本对象
+}
+```
 
 
 
