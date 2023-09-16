@@ -7,12 +7,14 @@ using namespace std;
 
 class HasPtr
 {
+    friend void swap(HasPtr &,HasPtr &);
 public:
     HasPtr(const string &);
-    HasPtr(HasPtr &);
+    HasPtr(const HasPtr &);
     HasPtr& operator=(const HasPtr &); 
+    bool operator<(const HasPtr &);
     ~HasPtr();
-    auto print();
+    void print();
 
 
 private:
@@ -22,8 +24,16 @@ private:
 
 };
 
+inline void swap(HasPtr &lhs,HasPtr &rhs)
+{
+    cout << "执行swap" << endl;
+    using std::swap;
+    swap(lhs.ps,rhs.ps);
+    swap(lhs.v,rhs.v);
+}
+
 HasPtr::HasPtr(const string &s=string()):ps(new string(s)),v(0),use(new size_t(1)){}
-HasPtr::HasPtr(HasPtr &h):ps(new string(*(h.ps)) ),v(h.v),use(h.use){++*use;}
+HasPtr::HasPtr(const HasPtr &h):ps(new string(*(h.ps)) ),v(h.v),use(h.use){++*use;}
 HasPtr& HasPtr::operator=(const HasPtr &h)
 {
     ++*h.use;
@@ -38,6 +48,11 @@ HasPtr& HasPtr::operator=(const HasPtr &h)
     return *this;//返回本对象
 }
 
+bool HasPtr::operator<(const HasPtr &rhs)
+{
+    return *ps < *rhs.ps;
+}
+
 HasPtr::~HasPtr()
 {
     if(--*use == 0)
@@ -47,9 +62,9 @@ HasPtr::~HasPtr()
     }
 }
 
-auto HasPtr::print()
+void HasPtr::print()
 {
-    std::cout << ps << " " << v << endl;
+    std::cout << *ps << " " << v << endl;
 }
 
 #endif

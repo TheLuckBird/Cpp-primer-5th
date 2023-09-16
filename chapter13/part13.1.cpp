@@ -1,13 +1,16 @@
 #include <vector>
+#include <algorithm>
 #include "Foo.h"
 #include "Numbered.h"
 #include "Employee.h"
 #include "HasPtr.h"
+// #include "Message.h"
+#include "StrVec.h"
 
 using namespace std;
 
-void f1(Foo f){}
-void f2(Foo &f){}
+// void f1(Foo f){}
+// void f2(Foo &f){}
 
 int main(int argc, char const *argv[])
 {
@@ -41,15 +44,39 @@ int main(int argc, char const *argv[])
     // Employee e = b;
     // e.print();
 
-    HasPtr a("cpp");
-    a.print();
-    HasPtr b;
-    b=a;
-    b.print();
+    // HasPtr a("cpp");
+    // a.print();
+    // HasPtr b;
+    // b=a;
+    // b.print();
 
-    b = b;
+    // b = b;
     // b = "cpp";
 
     // cout << sizeof(string) << " " << sizeof(int);
+
+    // HasPtr a{"cpp"};
+    // HasPtr b{"java"};
+    // swap(a,b);
+    // a.print();
+    // b.print();
+
+    // vector<HasPtr> v{a,b};
+    // v.push_back(a);
+    // v.push_back(b);
+
+    // cout << "排序前：" << endl;
+    // for(auto p:v)
+    //     p.print();
+    
+    // sort(v.begin(),v.end());
+
+    // cout << "排序后：" << endl;
+    // for(auto p:v)
+    //     p.print();
+
+   StrVec sv = {"one", "two", "three"};
+
+
     return 0;
 }

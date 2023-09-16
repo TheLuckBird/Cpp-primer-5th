@@ -4437,18 +4437,243 @@ HasPtr& HasPtr::operator=(const HasPtr &h)
     return *this;//返回本对象
 }
 ```
+### 13.1 交换操作
+除了定义拷贝控制成员，管理资源的类通常还定义一一个名为swap的函数。
+
+如果一个类定义了自己的swap,那么算法将使用类自定义版本。否则，算法将使用标准库定义的swap。交换两个类值HasPtr对象的代码可能像下面这样:
+```
+    HasPtr temp = v1;// 创建v1的值的一个临时副本
+    v1 = v2;//将v2的值赋予v1
+    v2 = temp;//将保存的v1的值赋予v2
+```
+理论上，这些内存分配都是不必要的。我们更希望swap交换指针，而不是分配string的新副本。即，我们希望这样交换两个HasPtr
+```
+    string *temp = v1.ps; // 为v1.ps中的指针创建一个副本
+    v1.ps = v2.ps;//将v2.ps中的指针赋予v1.ps
+    v2.ps = temp;//将保存的v1.ps中原来的指针赋予v2.ps
+```
+可以在我们的类上定义一个自己版本的swap来重载swap的默认行为。
+```
+class HasPtr {
+    friend void swap (HasPtr&, HasPtr&) ;
+    //其他成员定义，与13.2.1 节(第453页)中一样
+};
+inline
+void swap (HasPtr &lhs， HasPtr &rhs){
+    using std: : swap;
+    swap(1hs.ps, rhs.ps) ;
+    //交换指针，而不是string数据
+    swap(lhs.i, rhs.i) ;
+    //交换int成员
+}
+```
+
+我们首先将swap定义为friend，以便能访问HasPtr的(private的)数据成员。由于swap的存在就是为了优化代码，我们将其声明为inline函数。swap的函数体对给定对象的每个数据成员调用swap。
+
+swap并不是必要的。但是，对于分配了资源的类，定义swap可能是一种很重要的优化手段。
+
+每个swap调用应该都是未加限定的,每个调用都应该是swap,而不是std::swap。如果存在类型特定的swap版本，其匹配程度会优于std中定义的版本，如果不存在类型特定的版本，则会使用std中的版本(假定作用域中有using
+声明)。
+
+定义swap的类通常用swap来定义它们的赋值运算符。这些运算符使用了一种名为拷贝并交换(copy and swap)的技术。这种技术将左侧运算对象与右侧运算对象的一个副
+本进行交换:
+```
+    //注意rhs是按值传递的，意味着HasPtr的拷贝构造函数
+    //将右侧运算对象中的string拷贝到rhs
+    HasPtr& HasPtr: :operator= (HasPtr rhs)
+    //交换左侧运算对象和局部变量rhs的内容
+    swap(*this，rhs) ;
+    // rhs现在指向本对象曾经使用的内存.
+    return *this;
+    // rhs被销毁，从而delete了rhs中的指针
+```
+
+在这个版本的赋值运算符中，参数并不是一个引用，我们将右侧运算对象以传值方式传递
+给了赋值运算符。因此，rhs 是右侧运算对象的一个副本。参数传递时拷贝HasPtr(就是拷贝构造函数)的操作会分配该对象的string的一个新副本。
+
+当赋值运算符结束时，rhs被销毁,HasPtr的析构函数将执行。此析构函数delete
+rhs现在指向的内存，即，释放掉左侧运算对象中原来的内存。
+
+这个技术的有趣之处是它自动处理了自赋值情况且天然就是异常安全的。它通过在改
+变左侧运算对象之前拷贝右侧运算对象保证了自赋值的正确，这与我们在原来的赋值运算
+符中使用的方法是一致的。
+
+### 13.4 拷贝控制示例
+```
+class Folder;
+class Message
+{
+    friend class Folder;
+public:
+    Message(const string &str=""):contents(str){ }
+    Message(const Message &);
+    Message& operator=(const Message &);
+    ~Message();
+    void save(Folder &);
+    void remove(Folder &); 
+    void swap(Message &,Message &);
+    void addFldr(Folder *);
+    void addFldr(Folder *);
 
 
+private:
+    string contents; 
+    set<Folder *> folders;
+    void add_to_Folders(const Message &);
+    void remove_from_Folders();
+};
+```
 
+### 13.5 动态内存管理类
+某些类需要在运行时分配可变大小的内存空间。这种类通常可以(并且如果它们确实可以的话，一般应该)使用标准库容器来保存它们的数据。这一策略并不是对每个类 都适用;某些类需要自已进行内存分配。这些类一般来说必须定义自己的拷贝控制成员来管理所分配的内存。
+我们将实现标准库vector类的一个简化版本。我们所做的一一个简化是不使用模板，我们的类只用于string。因此，它被命名为StrVec。
+```
+class StrVec
+{
+public:
+    StrVec():elements(nullptr),first_free(nullptr),cap(nullptr){}
+    StrVec(StrVec &);
+    StrVec& operator=(const StrVec &);
+    ~StrVec();
 
+    void push_back(const string s);
+    size_t size() const{ return first_free - elements;}
+    size_t capacity() const { return cap - elements;}
+    string* begin(){ return elements;}
+    string* end() { return first_free;}
 
+private:
+    string *elements;
+    string *first_free;
+    string *cap;
+    
+    static allocator<string> alloc;
 
+    
+    pair<string*,string*> alloc_n_copy(const string*,const string*);
+    void free();
+    void chk_n_alloc(){ if(size()==capacity()) reallocate();}
+    void reallocate();
 
+};
+```
+函数push_back调用chk_n_alloc确保有空间容纳新元素。如果需要，chk_n_alloc会调用reallocate。当chk_n_alloc返回时，push_back知道必有空间容纳新元素。它要求其allocator成员来construct新的尾元素:
+```
+    void StrVec: :push_back (const string& s)
+    chk_n_alloc(); //确保有空间容纳新元素
+    //在first_free指向的元素中构造s的副本
+    alloc.construct(first_free++, s) ;
+```
+当我们用allocator分配内存时，必须记住内存是未构造的。为了使用此原始内存，我们必须调用(construct), 在此内存中构造一个对象。传递给construct的第一个参数必须是一个指针，指向调用allocate所分配的未构造的内存空间。剩余参数确定用哪个构造函数来构造对象。在本例中，只有一个额外参数，类型为string，因此会使用string的拷贝构造函数。
 
+我们在拷贝或赋值StrVec时，可能会调用alloc_n_copy 成员。类似vector,我们的StrVec类有类值的行为。当我们拷贝或赋值StrVec时，必须分配独立的内存，并从原StrVec对象拷贝元素至新对象。
 
+alloc_n_copy成员会分配足够的内存来保存给定范围的元素，并将这些元素拷贝到新分配的内存中。此函数返回一个指针的pair，两个指针分别指向新空间的开始位置和拷贝的尾后的位置:
+```
+    pair<string*, string*>
+    StrVec: :alloc_n_copy (const string *b， const string *e)
+    //分配空间保存给定范围中的元素;
+    auto data = alloc.allocate(e - b) ;
+    //初始化并返回一个pair,该pair由data和uninitialized copy的返回值构成
+    return {data, uninitialized_copy(b, e, data) };
+```
+返回的pair的first成员指向分配的内存的开始位置; second成员则uninitialized_copy的返回值，此值是一一个指针，指向最后一个构造元素之后的位置。
 
+free成员有两个责任:首先destroy元素，然后释放strVec自己分配的内存空间。for循环调用allocator的destroy成员，从构造的尾元素开始，到首元素为止，逆序销毁所有元素:
+```
+void StrVec: :free ()
+{
+    //不能传递给deallocate一个空指针，如果elements为0，函数什么也不做
+    if (elements) {
+        //逆序销毁旧元素
+        for (auto P = first_ free; p != elements; /* 空*/)
+        alloc. destroy(--p) ;
+        alloc. deallocate (elements，cap一elements) ;
+    }
+}
+```
+destroy函数会运行string的析构函数。string 的析构函数会释放string自己分
+配的内存空间。一旦元素被销毁，我们就调用deallocate来释放本StrVec对象分配的内存空间。我们传递给deallocate的指针必须是之前某次allocate调用所返回的指针。因此，
+在调用deallocate之前我们首先检查elements是否为空。
 
+拷贝构造函数调用alloc_ n_ _copy: 
+```
+StrVec::StrVec (const StrVec &s)
+{
+    //调用alloc_n_copy分配空间以容纳与s中一样多的元素
+    auto newdata = alloc_n_copy(s.begin(), s.end()) ;
+    elements = newdata. first;
+    first_free = cap = newdata. second;
+}
+```
+析构函数调用free:
+```
+StrVec: :~StrVec() { free(); }
+```
+拷贝赋值运算符在释放已有元素之前调用alloc_n_copy,这样就可以正确处理自赋值
+了:
+```
+StrVec &StrVec::operator= (const StrVec &rhs){
+//调用alloc_ n_ _copy分配内存，大小与rhs中元素占用空间一样多
+auto data = alloc_n_copy (rhs.begin(), rhs.end()) ;
+free() ;
+elements = data. first;
+first_ free■cap = data. second;
+return *this;
+}
+```
 
+在编写reallocate成员函数之前，我们稍微思考一下此函数应该做什么:  
+●为一个新的、更大的string数组分配内存  
+●在内存空间的前一部分构造对象，保存现有元素  
+●销毁原内存空间中的元素，并释放这块内存
+
+我们可以看出，为一个StrVec重新分配内存空间会引起从旧内存空间到新内存空间逐个拷贝string.虽然我们不知道string的实现细节，但我们知道string具有类值行为。当拷贝一个string时，新string和原string是相互独立的。改变原string不会影响到副本，反之亦然。
+由于string的行为类似值,我们可以得出结论，每个string对构成它的所有字符都会保存自己的一份副本。拷贝一个string必须为这些字符分配内存空间，而销毁一个string必须释放所占用的内存。
+
+拷贝一个string就必须真的拷贝数据，因为通常情况下,在我们拷贝了一个string之后，它就会有两个用户。但是，如果是reallocate拷贝strVec中的string, 则在拷贝之后，每个string只有唯一的用户。一旦将元素从旧空间拷贝到了新空间，我们就会立即销毁原string.
+
+因此，拷贝这些string中的数据是多余的。在重新分配内存空间时，如果我们能避免分配和释放string的额外开销，StrVec 的性能会好得多。
+
+通过使用新标准库引入的两种机制，我们就可以避免string的拷贝。  
+移动构造函数通常是将资源从给定对象“移动”而不是拷贝到正在创建的对象。而且我们
+知道标准库保证“移后源”(moved-from) string 仍然保持一个有效的、可析构的状态。
+对于string, 我们可以想象每个string 都有一个指向char数组的指针。可以假定
+string的移动构造函数进行了指针的拷贝，而不是为字符分配内存空间然后拷贝字符。
+
+我们使用的第二个机制是一一个名为move的标准库函数，它定义在utility头文件中。目前，关于move我们需要了解两个关键点。首先，当reallocate在新内存中构造string时，它必须调用move来表示希望使用string的移动构造函数，如果它漏掉了move调用，将会使用string的拷见构造函数。其次，我们通常不为move提供一个using声明,当我们使用move时，直接调用std: :move而不是move。
+
+```
+StrVec::~StrVec(){ free();}
+
+void StrVec::reallocate()
+{
+    auto newcapacity = size() ? 2*size():1;
+
+    auto newdata = alloc.allocate(newcapacity);
+
+    auto dest = newdata;
+    auto elem = elements;
+
+    for(size_t i=0;i!=size();++i)
+        alloc.construct(dest++,std::move(*elem++));
+    
+    free();
+
+    elements = newdata;
+    first_free = dest;
+    cap = elements + newcapacity;
+}
+
+```
+for循环遍历每个已有元素，并在新内存空间中construct 一个对应元素。我们使用dest指向构造新string的内存，使用elem指向原数组中的元素。我们每次用后置递增运算将dest (和elem)推进到各自数组中的下一个元素。
+
+construct的第i二个参数即，确定使用哪个构造函数的参数是move返回的值。调用move返回的结果会令construct使用string的移动构造函数。由于我们使用了移动构造函数，这些string管理的内存将不会被拷贝。相反，我们构造的每个string都会从elem指向的string那里接管内存的所有权。
+
+在元素移动完毕后，我们调用free 销毁旧元素并释放StrVec 原来使用的内存。
+string成员不再管理它们曾经指向的内存;其数据的管理职责已经转移给新StrVec内
+存中的元素了。我们不知道旧St rVec内存中的string包含什么值，但我们保证对它们
+执行string的析构函数是安全的。
 
 
 
