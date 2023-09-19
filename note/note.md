@@ -5111,22 +5111,222 @@ data << cout; .
 
 因此，如果我们希望为类自定义I0运算符，则必须将其定义成非成员函数。当然，I0运算符通常需要读写类的非公有数据成员,所以I0运算符一般被声明为友元
 
+通常情况下，输入运算符的第一个形参是运算符将要读取的流的引用，第二个形参是将要读入到的(非常量)对象的引用。该运算符通常会返回某个给定流的引用。第二个形参之所以必须是个非常量是因为输入运算符本身的目的就是将数据读入到这个对象中。
+```
+istream &operator>>(istream &is, Sales_data &item)
+{
+	double price;  // no need to initialize; we'll read into price before we use it
+	is >> item.bookNo >> item.units_sold >> price;
+	if (is)        // check that the inputs succeeded
+    	item.revenue = item.units_sold * price;
+	else
+    	item = Sales_data(); // input failed: give the object the default state
+	return is;
+}
+```
+在执行输入运算符时可能发生下列错误:  
+●当流含有错误类型的数据时读取操作可能失败。例如在读取完bookNo后，输入运算符假定接下来读入的是两个数字数据，一旦输入的不是数字数据，则读取操作及后续对流的其他使用都将失败。  
+●当读取操作到达文件末尾或者遇到输入流的其他错误时也会失败。在程序中我们没有逐个检查每个读取操作，而是等读取了所有数据后赶在使用这些数据前一次性检查:  
+```
+	if (is)        // check that the inputs succeeded
+    	item.revenue = item.units_sold * price;
+	else
+    	item = Sales_data(); // input failed: give the object the default state
+```
+如果读取操作失败，则price的值将是未定义的。因此，在使用price前我们需要首先检查输入流的合法性，然后才能执行计算并将结果存入revenue。如果发生了错误，我们无须在意到底是哪部分输入失败，只要将一个新的默认初始化的Salesdata对象赋予item从而将其重置为空Sales data就可以了。
 
+如果在发生错误前对象已经有一部分被改变，则适时地将对象置为合法状态显得异常重要。通过将对象置为合法的状态，我们能(略微)保护使用者免于受到输入错误的影响。此时的对象处于可用状态，即它的成员都是被正确定义的。而且该对象也不会产生误导性的结果，因为它的数据在本质上确实是一体的。
 
+### 14.3 算术和关系运算
+通常情况下，我们把算术和关系运算符定义成非成员函数以允许对左侧或右侧的运算对象进行转换。因为这些运算符一-般不需要改变运算对象的状态，所以形参都是常量的引用。
 
+算术运算符通常会计算它的两个运算对象并得到一个新值，这个值有别于任意一个运算对象，常常位于一个局部变量之内，操作完成后返回该局部变量的副本作为其结果。如果类定义了算术运算符，则它-般也会定义一个对应的复合赋值运算符。此时，最有效的方式是使用复合赋值来定义算术运算符:
+```
+// assumes that both objects refer to the same book
+Sales_data 
+operator+(const Sales_data &lhs, const Sales_data &rhs)
+{
+	Sales_data sum = lhs;  // copy data members from lhs into sum
+	sum += rhs;            // add rhs into sum
+	return sum;
+}
+```
+通常情况下，C++中的类通过定义相等运算符来检验两个对象是否相等。也就是说，它们会比较对象的每一个数据成员，只有当所有对应的成员都相等时才认为两个对象相等。
+```
+inline
+bool operator==(const Sales_data &lhs, const Sales_data &rhs)
+{
+	return lhs.isbn() == rhs.isbn() && 
+	       lhs.units_sold == rhs.units_sold && 
+	       lhs.revenue == rhs.revenue;
+}
+inline
+bool operator!=(const Sales_data &lhs, const Sales_data &rhs)
+{
+	return !(lhs == rhs);
+}
+```
+它们似乎比较简单，也没什么价值，对于我们来说重要的是丛这些函数中体现出来的设计准则:
+●如果一个类含有判断两个对象是否相等的操作，则它显然应该把函数定义成operator==而非一个普通的命名函数:因为用户肯定希望能使用==比较对象，所以提供了==就意味着用户无须再费时费力地学习并记忆一个全新的函数名字。此外，类定义了==运算符之后也更容易使用标准库容器和算法。  
+●如果类定义了operator==,则该运算符应该能判断一组给定的对象中是否含有重复数据。  
+●通常情况下，相等运算符应该具有传递性，换句话说，如果a==b和b==c都为真，则a==c也应该为真。  
+●如果类定义了operator==，则这个类也应该定义operator!=.对于用户来说，当他们能使用==时肯定也希望能使用!=，反之亦然。  
+●相等运算符和不相等运算符中的一个应该把工作委托给另外一个, 这意味着其中一个运算符应该负责实际比较对象的工作,而另一个运算符则只是调用那个真正工作的运算符。
 
+通常情况下关系运算符应该  
+1.定义顺序关系，令其与关联容器中对关键字的要求一致;并且”  
+2.如果类同时也含有==运算符的话，则定义一种关系令其与=-保持一致。 特别是，如果两个对象是!=的，那么一个对象应该<另外一个。
 
+如果存在唯一种逻辑可靠的<定义，则应该考虑为这个类定义<运算符。如果类同时还包含==，则当且仅当<的定义和==产生的结果一致时才定义<运算符。
 
+### 14.4 赋值运算符
+拷贝赋值和移动赋值运算符，它们可以把类的一个对象赋值给该类的另一个对象。此外，类还可以定义其他赋值运算符以使用别的类型作为右侧运算对象。
 
+在拷贝赋值和移动赋值运算符之外，标准库vector类还定义了第三种赋值运算符，该运算符接受花括号内的元素列表作为参数。
+```
+vector<string> v;
+v = {"a", "an", "the"};
+```
+同样，也可以把这个运算符添加到StrVec类中:
+```
+class StrVec {
+public:
+    StrVec &operator=(std: :initializer_ list<std: :string>) ;
+    //其他成员与13.5节(第465页)一致
+};
+```
+为了与内置类型的赋值运算符保持一致 (也与我们已经定义的拷贝赋值和移动赋值运算一致)，这个新的赋值运算符将返回其左侧运算对象的引用
+```
+StrVec &StrVec: :operator= (initializer_list<string> il)
+{
+    // alloc_ n_ _copy分配内存空间并从给定范围内拷贝元素
+    auto data = alloc_ n_ copy(il.begin(), il.end()) ;
+    free() ;
+    // 销毁对象中的元素 并释放内存空间
+    elements = data.first; // 更新数据成员使其指向新空间
+    first_ free = cap = data. second;
+    return *this
+}
+```
+我们可以重载赋值运算符。不论形参的类型是什么，赋值运算符都必须定义为成员函数。
 
+复合赋值运算符不非得是类的成员。不过我们还是倾血王把包括复合赋值在内的所有赋值运算都定义在类的内部。为了与内置类型的复合赋值保持一致。类中的复合赋值运算符也要返回其左侧运算对象的引用。
 
+### 14.5 下标运算符
+表示容器的类通常可以通过元素在容器中的位置访问元素，这些类一般会定义下标运算符operator[]。  
+下标运算符必须是成员函数。  
+为了与下标的原始定义兼容，下标运算符通常以所访问元素的引用作为返回值，这样做的好处是下标可以出现在赋值运算符的任意一端。 进一步， 我们最好同时定义下标运算符的常量版本和非常量版本，当作用于一个常量对象时，下标运算符返回常量引用以确保我们不会给返回的对象赋值。
+```
+class StrVec {
+public:
+    std: :string& operator[](std: :size_ t n)
+    { return elements[n] ; }
+    const std: :string& operator[] (std: :size_ t n) const
+    { return elements[n]; }
+private :
+    std: :string *elements;
+    //指向数组首元素的指针
+};
+```
+上面这两个下标运算符的用法类似于vector或者数组中的下标。因为下标运算符返回的是元素的引用，所以当StrVec是非常量时，我们可以给元素赋值;而当我们对常量对象取下标时，不能为其赋值
+```
+//假设svec是一个StrVec对象
+const StrVec cvec = svec;
+//把svec的元素拷贝到cvec中
+//如果svec中含有元素，对第一个元素运行string的empty函数
+if (svec.size() && svec[0] . empty()) {
+svec[0] = "zero";
+//正确:下标运算符返回string的引用
+cvec[0] = "Zip";
+//错误:对cvec取下标返回的是常量引用
+}
+```
+### 14.6 递增和递减运算符
+在迭代器类中通常会实现递增运算符(++) 和递减运算符(--)， 这两种运算符使得类可以在元素的序列中前后移动。C++语言并不要求递增和递减运算符必须是类的成员，但是因为它们改变的正好是所操作对象的状态，所以建议将其设定为成员函数。
 
+对于内置类型来说，递增和递减运算符既有前置版本也有后置版本。同样，我们也应该为类定义两个版本的递增和递减运算符。
 
+```
+class StrBlobPtr {
+public:
+    //递增和递减运算符
+    StrBlobPtr& operator++() ;
+    . //前置运算符
+    StrBlobPtr& operator--() ;
+};
+```
+为了与内置版本保持一致，前置运算符应该返回递增或递减后对象的引用。
 
+```
+//前置版本:返回递增/递减对象的引用
+StrBlobPtr& StrBlobPtr: :operator++ ()
+{
+    //如果curr已经指向了容器的尾后位置，则无法递增它
+    check (curr, "increment past end of StrBlobPtr") ;
+    ++curr;
+    //将curr在当前状态下向前移动一个元素
+    return *this;
+}
 
+StrBlobPtr& StrBlobPtr: :operator-- ()
+{
+    //如果curr是0，则继续递减它将产生一个无效下标.
+    --curr;
+    //将curr在当前状态下向后移动一个元素
+    check (curr, "decrement past begin of StrBlobPtr") ;
+    return *this;
+}
+```
+普通的重载形式无法区分两种情况,前置和后置版本使用的是同一个符号，意味着其重载版本所用的名字将是相同的。并且运算对象的数量和类型也相同。为了解决这个问题，后置版本接受-一个额外的(不被使用) int 类型的形参。
 
+当我们使用后置运算符时，编译器为这个形参提供一个值为0的实参。尽管从语法来说后置函数可以使用这个额外的形参，但是在实际过程中通常不会这么做。这个形参的唯一作用就是区分前置版本和后置版本的函数，而不是真的要在实现后置版本时参与运算。
+```
+class StrBlobPtr {
+public:
+    //递增和递减运算符
+    StrBlobPtr operator++ (int) ;
+    //后置运算符
+    StrBlobPtr operator-- (int) ;
+    //其他成员和之前的版本一致
+};
+```
+为了与内置版本保持一致，后置运算符应该返回对象的原值(递增或递减之前的值)，返回的形式是一个值而非引用。
 
+对于后置版本来说，在递增对象之前需要首先记录对象的状态:
+```
+//后置版本:递增/递减对象的值但是返回原值
+StrBlobPtr StrBlobPtr: :operator++ (int)
+{
+    //此处无须检查有效性，调用前置递增运算时才需要检查
+    StrBlobPtr ret = *this; // 记录当前的值
+    ++*this;
+    //向前移动一个元素,前置++需要检查递增的有效性
+    return ret;
+}
+//返回之前记录的状态
+StrBlobPtr StrBlobPtr: :operator--(int)
+{
+    //此处无须检查有效性，调用前置递减运算时才需要检查
+    StrBlobPtr ret = *this; // 记录当前的值
+    --*this;
+    //向后移动一个元素，前置--需要检查递减的有效性
+    return ret;
+    //返回之前记录的状态   
+}
+```
+后置运算符调用各自的前置版本来完成实际的工作。因此最终的效果是，对象本身向前移动了一个元素，而返回的结果仍然反映对象在未递增之前原始的值。
 
+可以显式地调用一个重载的运算符，其效果与在表达式中以运算符号的形式使用它完全一样。如果我们想通过函数调用的方式调用后置版本，则必须为它的整型参数传递-一个值
+```
+StrBlobPtr p(a1) ;
+// p指向a1中的
+vector
+p.operator++ (0) ;
+//调用后置版本的operator++
+p.operator++() ;
+//调用前置版本的operator++
+```
+尽管传入的值通常会被运算符函数忽略，但却必不可少，因为编译器只有通过它才能知道应该使用后置版本。
 
 
 
