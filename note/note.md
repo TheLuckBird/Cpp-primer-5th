@@ -5328,7 +5328,52 @@ p.operator++() ;
 ```
 尽管传入的值通常会被运算符函数忽略，但却必不可少，因为编译器只有通过它才能知道应该使用后置版本。
 
+### 14.7 成员访问运算符
+```
+class StrBlobPtr 
+{
+public:
+    std: :string& operator* () const
+    { 
+        auto P = check (curr, "derererence past end") ;
+        return (*p) [curr]; // (*p) 是对象所指的vector
+    }
+    std: :string* operator->()const
+    { 
+        //将实际工作委托给解引用运算符
+        return & this->operator* () ;
+    }
+    //其他成员与之前的版本一致
+}
+```
+值得注意的是，我们将这两个运算符定义成了const 成员，这是因为与递增和递减运算符不一样，获取一个元素并不会改变StrBlobPtr对象的状态。同时，它们的返回值分别是非常量string的引用或指针，因为一个StrBlobPtr只能绑定到非常量的strBlob对象。
+这两个运算符的用法与指针或者vector迭代器的对应操作完全一致:
+```
+StrBlob al = {"hi", "bye", "now"} ;
+StrBlobPtr p(a1) ;
+// p指向al中的vector
+*p = "okay";
+//给al的首元素赋值
+cout << p->size() << endl;
+//打印4,这是al首元素的大小
+cout << (*p) .size() << endl;
+//等价于p->size()
+```
+我们能令operator*完成任何我们指定的操作。箭头运算符则不是这样，它永远不能丢掉成员访问这个最基本的含义。当我们重载箭头时，可以改变的是箭头从哪个对象当中获取成员，而箭头获取成员这一事实则永远不变。
 
+对于形如point->mem的表达式来说，point必须是指向类对象的指针或者是一个重载了operator->的类的对象。根据point类型的不同，point->mem 分别等价于
+```
+(*point) . mem;
+// point是一个内置的指针类型
+point. operator () ->mem;
+// point是类的一个对象
+```
+
+除此之外，代码都将发生错误。point->mem 的执行过程如下所示:  
+1.如果point是指针，则我们应用内置的箭头运算符，表达式等价于(*point) .mem。首先解引用该指针，然后从所得的对象中获取指定的成员。如果point所指的类型没有名为mem的成员，程序会发生错误。    
+2.如果point是定义了operator->的类的一一个对象,则我们使用point .operator->()的结果来获取mem。其中，如果该结果是-一个指针，则执行第1步:如果该结果本.身含有重载的operator->()， 则重复调用当前步骤。最终，当这一过程结束时程序或者返回了所需的内容，或者返回一些表示程序错误的信息。重载的箭头运算符必须返回类的指针或者自定义了箭头运算符的某个类的对象。
+
+### 14.8 函数调用运算符
 
 
 
