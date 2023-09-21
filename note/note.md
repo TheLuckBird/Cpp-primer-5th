@@ -5374,9 +5374,98 @@ point. operator () ->mem;
 2.如果point是定义了operator->的类的一一个对象,则我们使用point .operator->()的结果来获取mem。其中，如果该结果是-一个指针，则执行第1步:如果该结果本.身含有重载的operator->()， 则重复调用当前步骤。最终，当这一过程结束时程序或者返回了所需的内容，或者返回一些表示程序错误的信息。重载的箭头运算符必须返回类的指针或者自定义了箭头运算符的某个类的对象。
 
 ### 14.8 函数调用运算符
+如果类重载了函数调用运算符，则我们可以像使用函数一样使用该类的对象。因为这样的类同时也能存储状态，所以与普通函数相比它们更加灵活。
+```
+struct absInt {
+    int operator() (int val) const {
+    return val < 0 ? -val : val;
+    }
+};
+```
+我们使用调用运算符的方式是令一个 absInt对象作用于一个实参列表，这一过程看起来非常像调用函数的过程:
+```
+int i = -42;
+absInt abs0bj;
+//含有函数调用运算符的对象
+int ui = absObj (i);
+//将i传递给absobj . operator ()
+```
+即使absObj只是一个对象而非函数,我们也能“调用”该对象。调用对象实际上是在运行重载的调用运算符。在此例中，该运算符接受一个int值并返回其绝对值。
 
+函数调用运算符必须是成员函数。一个类可以定义多个不同版本的调用运算符，相互之间应该在参数数量或类型上有所区别。如果类定义了调用运算符。则该类的对象称作函数对象( function object)。 因为可以调用这种对象，所以我们说这些对象的“行为像函数一样”。
 
+函数对象常常用作泛型算法的实参
+```
+class PrintString {
+public:
+    PrintString(ostream &o = cout, char c = ' '): 
+		os(o), sep(c) { }
+    void operator()(const string &s) const { os << s << sep; }
+private:
+    ostream &os;   // stream on which to write
+	char sep;      // character to print after each output
+};
 
+class ReadLine {
+public:
+	ReadLine() = delete;
+	ReadLine(istream &i) : is(i) { }
+	bool operator()(string &s) const 
+	{
+		if(getline(is, s))
+			return true; 
+		else 
+			return false; 
+	}
+private:
+	istream &is;
+};
+
+int main()
+{
+	vector<string> vs;
+	ReadLine rl(cin);    // object that read lines from cin
+	string s;
+	while (rl(s))        // store what rl reads into s
+		vs.push_back(s);
+
+	cout << "read : " << vs.size() << " elements" << endl;
+	PrintString printer;   // uses the defaults; prints to cout 
+	printer(s);            // prints s followed by a space on cout
+
+	PrintString errors(cerr, '\n');
+	errors(s);             // prints s followed by a newline on cerr
+
+	cerr << "for_each printing to cerr" << endl;
+	for_each(vs.begin(), vs.end(), PrintString(cerr, '\n'));
+}
+```
+
+lambda是函数对象  
+当我们编写了一个lambda 后，编译器将该表达式翻译成一个未命名类的未命名对象。在lambda表达式产生的类中含有一个重载的函数调用运算符
+
+对于我们传递给stable sort 作为其最后一个实参的lambda表达式来说
+```
+//根据单词的长度对其进行排序，对于长度相同的单词按照字母表顺序排序
+stable sort (words .begin()，words .end()，
+[] (const string &a, const string &b)
+{ return a.size() < b.size(); }) ;
+```
+其行为类似于下面这个类的一个未命名对象  
+```
+class ShorterString {
+public:
+    bool operator() (const string &s1, const string &s2) const
+    { return sl.size() < s2.size() ; }
+};
+```
+产生的类只有一个函数调用运算符成员，它负责接受两个string并比较它们的长度，它的形参列表和函数体与lambda表达式完全一样。默认情况下lambda不能改变它捕获的变量。因此在默认情况下，由lambda产生的类当中的函数调用运算符是一个const成员函数。如果lambda被声明为可变的，则调用运算符就不是const的了。
+
+用这个类替代lambda表达式后，我们可以重写并重新调用stable_sort:
+```
+stable_ sort (words.begin(), words .end(), ShorterString()) ;
+```
+第三个实参是新构建的ShorterString对象，当stable_ sort 内部的代码每次比较两个string时就会“调用”这一对象，此时该对象将调用运算符的函数体，判断第一个string的大小小于第二个时返回true。
 
 
 
