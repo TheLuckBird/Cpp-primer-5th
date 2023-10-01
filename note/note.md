@@ -2691,23 +2691,21 @@ lambda捕获和返回：
 ```
 但是，我们不能用这个函数作为find_if 的一个参数find_ if 接受一个一元谓词，因此传递给find_if的可调用对象必须接受单一参数。biggies传递给find_if的lambda使用捕获列表来保存Sz。为了用check_size来代替此lambda,必须解决如何向sz形参传递一个参数的问题。
 
-我们可以解决向check_size传递一个长度参数的问题，方法是使用一个新的名为bind的标准库函数，它定义在头文件functional中。可以将bind函数看作一个通用的函数适配器，它接受-一个可调用对象，生成一个新的可调用对象来“适应”原对象的参数列表。
+我们可以解决向check_size传递一个长度参数的问题，方法是使用一个新的名为bind的标准库函数，它定义在头文件functional中。可以将bind函数看作一个通用的函数适配器，它接受一个可调用对象，生成一个新的可调用对象来“适应”原对象的参数列表。
 
 调用bind的一般形式为:
-auto newCallable = bind (callable, arg_ _list) ;
-其中，newCallable 本身是一一个可调用对象，arg_ list 是一个逗号分隔的参数列表，对应给定的callable的参数。即，当我们调用newCallable时，newCallable会调用callable, 并传递给它arg list 中的参数。
+auto newCallable = bind (callable, arg_list) ;
+其中，newCallable 本身是一个可调用对象，arg_list 是一个逗号分隔的参数列表，对应给定的callable的参数。即，当我们调用newCallable时，newCallable会调用callable, 并传递给它arg_list 中的参数。
 
-arg_ list 中的参数可能包含形如_ n的名字，其中n是一个整数。这些参数是“占位符”，表示newCallable的参数，它们占据了传递给newCallable的参数的“位置”。数值n表示生成的可调用对象中参数的位置:_ 1 为newCallable的第一个参数，_2 为第二个参数，依此类推。
+arg_list 中的参数可能包含形如_n的名字，其中n是一个整数。这些参数是“占位符”，表示newCallable的参数，它们占据了传递给newCallable的参数的“位置”。数值n表示生成的可调用对象中参数的位置:_1 为newCallable的第一个参数，_2 为第二个参数，依此类推。
 
-我们将使用bind生成-一个调用check_ _size 的对象，如下
-所示，它用一个定值作为其大小参数来调用check_ _size
+我们将使用bind生成一个调用check_size 的对象，如下所示，它用一个定值作为其大小参数来调用check_ _size
 ```
     // check6是一个可调用对象，接受一个string类型的参数
-    //并用此string和值 6来调用 check_ size 
-    auto check6 = bind (check_ size,_ 1， 6);
+    //并用此string和值 6来调用 check_size 
+    auto check6 = bind (check_size,_1， 6);
 ```
-此bind调用只有一个占位符，表示check6只接受单一参数。占位符出现在arg list 的第一个位置，表示check6的此参数对应check_size的第一个参数。此参数是一个const string&。因此，调用check6必须传递给它一个string类型的参数，check6
-会将此参数传递给check_size.
+此bind调用只有一个占位符，表示check6只接受单一参数。占位符出现在arg_list 的第一个位置，表示check6的此参数对应check_size的第一个参数。此参数是一个const string&。因此，调用check6必须传递给它一个string类型的参数，check6会将此参数传递给check_size.
 ```
     string s = "hello";
     bool b1 = check6(s) ; // check6(s) 会调用check_ size(s， 6)
@@ -2718,16 +2716,15 @@ arg_ list 中的参数可能包含形如_ n的名字，其中n是一个整数。
 ```
 替换为如下使用check_ size的版本:
 ```
-    auto WC = find_ if (words.begin()，words.end(),bind(check_ size,_ 1， sz)) ;
+    auto WC = find_ if (words.begin()，words.end(),bind(check_size,_1， sz)) ;
 ```
-此bind调用生成一个可调用对象，将check_size的第一个参数绑定到sz的值。当find_ if 对words中的string调用这个对象时，这些对象会调用check_ size,将给定的string和sz传递给它。因此，find_ if可以有效地对输入序列中每个string
-调用check_ size,实现string的大小与sz的比较。
+此bind调用生成一个可调用对象，将check_size的第一个参数绑定到sz的值。当find_if 对words中的string调用这个对象时，这些对象会调用check_size,将给定的string和sz传递给它。因此，find_if可以有效地对输入序列中每个string调用check_ size,实现string的大小与sz的比较。
 
 名字_n都定义在一个名为placeholders的命名空间中，而这个命名空间本身定义在std命名空间中。为了使用这些名字，两个命名空间都要写上。
 
-对每个占位符名字，我们都必须提供一一个 单独的using声明。编写这样的声明很烦人，也很容易出错。可以使用另外一种不同形式的using语句，而不是分别声明每个占位符，如下所示:
-`using namespace namespace name;`
-这种形式说明希望所有来自namespace_ name的名字都可以在我们的程序中直接使用。
+对每个占位符名字，我们都必须提供一个单独的using声明。编写这样的声明很烦人，也很容易出错。可以使用另外一种不同形式的using语句，而不是分别声明每个占位符，如下所示:
+`using namespace namespace_name;`
+这种形式说明希望所有来自namespace_name的名字都可以在我们的程序中直接使用。
 
 `using namespace std: :placeholders;`
 使得由placeholders定义的所有名字都可用。与bind函数一样， placeholders命名空间也定义在functional头文件中。
@@ -2736,10 +2733,9 @@ arg_ list 中的参数可能包含形如_ n的名字，其中n是一个整数。
 例如，假定f是一个可调用对象，它有5个参数，则下面对bind的调用:
 ```
     // g是一个有两个参数的可调用对象
-    autog=bind(f,a,b,_2，c,_1);
+    auto g=bind(f,a,b,_2，c,_1);
 ```
-生成一个新的可调用对象，它有两个参数。分别用占位符_2和_1表示。这个新的可调用对象将它自己的参数作为第三个和第五个参数传递给f。f的第一个、第二个和第四个参数分别被绑定到给定的值a、b和c上。
-传递给g的参数按位置绑定到占位符。即。第一个参数绑定到_1，第二个参数绑定到_2。因此，当我们调用g时，其第一个参数将被传递给f作为最后一个参数，第二个参数将被传递给f作为第三个参数。实际上，这个bind调用会将：
+生成一个新的可调用对象，它有两个参数。分别用占位符_2和_1表示。这个新的可调用对象将它自己的参数作为第三个和第五个参数传递给f。f的第一个、第二个和第四个参数分别被绑定到给定的值a、b和c上。传递给g的参数按位置绑定到占位符。即。第一个参数绑定到_1，第二个参数绑定到_2。因此，当我们调用g时，其第一个参数将被传递给f作为最后一个参数，第二个参数将被传递给f作为第三个参数。实际上，这个bind调用会将：
 ```
     g(_1,_2)
     映射为
@@ -5467,10 +5463,212 @@ stable_ sort (words.begin(), words .end(), ShorterString()) ;
 ```
 第三个实参是新构建的ShorterString对象，当stable_ sort 内部的代码每次比较两个string时就会“调用”这一对象，此时该对象将调用运算符的函数体，判断第一个string的大小小于第二个时返回true。
 
+标准库定义了一组表示算术运算符、关系运算符和逻辑运算符的类，每个类分别定义了一个执行命名操作的调用运算符。这些类都被定义成模板的形式，我们可以为其指定具体的应用类型，这里的类型即调用运算符的形参类型,定义在functional头文件中。
+```
+plus<int> intAdd;
+//可执行int加法的函数对
+negate<int> intNegate;
+//可对int值取反的函数对象
+//使用intAdd: :operator(int， int)求10和20的和
+int sum = intAdd(10， 20) ;
+//等价于sum = 30
+sum = intNegate (intAdd(10，20)) ;
+//等价于sum = 30
+//使用intNegate: :operator (int)生成-10
+//然后将-10作为intAdd: :operator(int, int)的第二个参数
+sum = intAdd(10， intNegate(10)) ;
+//sum=0
+```
+![Alt text](image-78.png)
 
+在算法中使用标准库函数对象  
+表示运算符的函数对象类常用来替换算法中的默认运算符。在默认情况下排序算法使用operator<将序列按照升序排列。如果要执行降序排列的话，我们可以传入一个greater类型的对象。该类将产生一个调用运算符并负责执行待排序类型的大于运算。
+```
+vector<string> svec{"cpp","c","java","python"};
+//传入一个临时的函数对象用于执行两个string对象的>比较运算
+//第三个实参是greater<strinq>类型的一个未命名的对象
+sort(svec.begin(),svec.end(),greater<string>());
+for_each(svec.begin(),svec.end(),[](string s){ cout << s << " ";});
+cout << endl;
+```
+标准库规定其函数对象对于指针同样适用，我们可能会希望通过比较指针的内存地址来sort指针的vector。直接这么做将产生未定义的行为，因此我们可以使用一个标准库函数对象来实现该目的:
+```
+string s="cpp",y="primer";
+vector<string*> spvec{&s,&y};
+for_each(spvec.begin(),spvec.end(),[](string *s){ cout << s << " ";});
+cout << endl;
+// sort(spvec.begin(),spvec.end(),[](string*a,string*b){return a<b;});
+// sort(spvec.begin(),spvec.end(),less<string*>());
+sort(spvec.begin(),spvec.end(),greater<string*>());
+for_each(spvec.begin(),spvec.end(),[](string *s){ cout << s << " ";});
+cout << endl;
+```
+关联容器使用less<key_type>对元素排序，因此我们可以定义一个指针的set或者在map中使用指针作为关键值而无须直接声明less。
 
+可调用对象与function  
+C++语言中有几种可调用的对象:函数、函数指针、lambda 表达式、bind创建的对象以及重载了函数调用运算符的类。
 
+和其他对象一样，可调用的对象也有类型。例如，每个lambda 有它自己唯一的(未命名)类类型:函数及函数指针的类型则由其返回值类型和实参类型决定，等等。然而，两个不同类型的可调用对象却可能共享同一种调用形式 ( call signature)。调用形式指明了调用返回的类型以及传递给调用的实参类型。一种调用形式对应一个函数类型，例如:  
+`int(int, int) `   
+是一个函数类型，它接受两个int、返回一个int。
 
+不同类型可能具有相同的调用形式  
+对于几个可调用对象共享同一种调用形式的情况，有时我们会希望把它们看成具有相同的类型。
+```
+//普通函数
+int add(inti,intj){return i+j;}
+// lambda, 其产生一个未命名的函数对象类:
+auto mod=[](inti,intj){return i%j;};
+//函数对象类
+struct divide {
+    int operator() (int denominator, int divisor) {
+    return denominator / divisor;
+    }
+};
+```
+上面这些可调用对象分别对其参数执行了不同的算术运算，尽管它们的类型各不相同，但是共享同一种调用形式:`int (int，int)`
+
+定义一个函数表( function table)用于存储指向这些可调用对象的“指针”。当程序需要执行某个特定的操作时，从表中查找该调用的函数。在C++语言中，函数表很容易通过map来实现。我们使用一个表示运算符符号的string对象作为关键字;使用实现运算符的函数作为值
+```
+//构建从运算符到函数指针的映射关系，其中函数接受两个int、返回一个int
+map<string, int(*) (int, int)> binops;
+//正确:add是一个指向正确类型函数的指针
+binops.insert({"+", add}); // {"+", add}是一个pair
+binops. insert({"%"，mod}) ;
+//错误: mod不是一个函数指针
+```
+问题在于mod是个lambda表达式，而每个lambda有它自己的类类型，该类型与存储在binops中的值的类型不匹配。
+
+我们可以使用一一个名为function的新的标准库类型解决上述问题，function 定义在functional头文件中
+![Alt text](image-79.png)
+
+function是一个模板，和我们使用过的其他模板一样，当创建一个具体的function类型时我们必须提供额外的信息。所谓额外的信息是指该function类型能够表示的对象的调用形式。参考其他模板，我们在-对尖括号内指定类型:`function<int(int, int)>`  
+
+在这里我们声明了一个function类型，它可以表示接受两个int、返回一个int的可调用对象。因此，我们可以用这个新声明的类型表示任意一种桌面计算器用到的类型;
+```
+function<int (int，int)> f1 = add;
+//函数指针
+function<int (int, int)> f2 = divide() ;
+//函数对象类的对象
+function<int (int, int)> f3 = [] (int i, int j) // lambda
+{returni*j;}
+cout << f1(4,2) << endl; 
+//打印6
+cout << f2(4,2) << endl;
+//打印2
+cout << f3(4,2) << endl;
+//打印8
+```
+使用这个function类型我们可以重新定义map: .
+```
+//列举了可调用对象与二元运算符对应关系的表格
+//所有可调用对象都必须接受两个int、 返回一个int
+//其中的元素可以是函数指针、函数对象或者lambda
+map<string, function<int (int，int)>> binops;
+```
+我们能把所有可调用对象，包括函数指针、lambda或者函数对象在内，都添加到这个map中:
+```
+map<string，function<int(int, int)>> binops = {
+{"+"， add} ,
+//函数指针
+{"-"， std: :minus<int>() },
+//标准库函数对象
+{"/"， divide() },
+//用户定义的函数对象.
+{"*"，[](inti,intj){returni*j;}},
+//未命名的lambda
+{"%"，mod} } ;
+//命名了的lambda对象
+```
+map中包含5个元素，尽管其中的可调用对象的类型各不相同，我们仍然能够把所有这些类型都存储在同一个function<int (int ，int)>类型中。当我们索引map时将得到关联值的一个引用。如果我们索引binops,将得到function对象的引用。function类型重载了调用运算符，该运算符接受它自己的实参然后将其传递给存好的可调用对象
+```
+binops["+"] (10，5); //调用add(10，5)
+binops["-"] (10，5); // 使用minus<int>对象的调用运算符
+binops["/"] (10，5); //使用divide对象的调用运算符
+binops["*"] (10，5); //调用lambda函数对象
+binops["%"] (10，5); //调用lambda函数对象
+```
+重载的函数与function  
+我们不能(直接)将重载函数的名字存入function类型的对象中
+```
+int add(int i,int j){return i+j;}
+Sales_data add(const Sales_ data&， const Sales data&) ;
+map<string, function<int (int, int)>> binops;
+binops. insert( {"+", add} ) ;
+//错误:哪个add?
+```
+解决上述二义性问题的一条途径是存储函数指针而非函数的名字
+```
+int (*fp) (int,int) = add;
+//指针所指的add是接受两个int的版本
+binops.insert( {"+"， fp} ) ;
+//正确: fp指向一个正确的add版本
+```
+我们也能使用lambda来消除二义性
+```
+//正确:使用lambda来指定我们希望使用的add版本
+binops. insert( {"+"， [] (int a, int b) {return add(a, b);} } );
+```
+lambda内部的函数调用传入了两个int,因此该调用只能匹配接受两个int的add版本，而这也正是执行lambda时真正调用的函数。
+
+### 14.9 重载、类型转换与运算符
+我们能定义对于类类型的类型转换，通过定义类型转换运算符可以做到这一点。转换构造函数和类型转换运算符共同定义了类类型转换( class-type conversions)，这样的转换有时也被称作用户定义的类型转换。
+
+类型转换运算符是类的一种特殊成 员函数，它负责将一个类类型的值转换成其他类型。类型转换函数的一般形式如下所示:
+```
+operator type() const;
+```
+
+其中type表示某种类型。类型转换运算符可以面向任意类型(除了void之外)进行定义，只要该类型能作为函数的返回类型。因此，我们不允许转换成数组或者函数类型，但允许转换成指针(包括数组指针及函数指针)或者引用类型。
+
+一个类型转换函数必须是类的成员函数;它不能声明返回类型，形参列表也必须为空。类型转换函数通常应该是const。
+
+定义含有类型转换运算符的类  
+```
+class SmallInt {
+public:
+    SmallInt (int i = 0) : val (i)
+    {
+        if (i< 0|| i> 255)
+        throw std: :out_ of_ range ("Bad SmallInt value") ;
+    }
+    operator int() const{return val; }
+private :
+    std: :size_ t val;
+};
+```
+我们的SmallInt类既定义了向类类型的转换，也定义了从类类型向其他类型的转换。其中，构造函数将算术类型的值转换成SmallInt对象，而类刑转换运算符将SmallInt，对象转换成int:
+```
+SmallInt si;
+si=4;
+// 首先将 4隐式地转换 成SmallInt， 然后调用SmallInt: :operator=
+si+3;
+//首先将si隐式地转换成int，然后执行整数的加法
+```
+尽管编译器一次只能执行一个用户定义的类型转换，但是隐式的用户定义类型转换可以置于一个标准(内置)类型转换之前或之后，并与其一起使用。因此，我们可以将任何算术类型传递SmallInt的构造函数。类似的，我们也能使用类型转换运算符将一个SmallInt对象转换成int,然后再将所得的int转换成任何其他算术类型
+```
+//内置类型转换将double实参转换成int
+SmallInt si = 3.14;
+//调用SmallInt (int)构造函数
+// SmallInt 的类型转换运算符将si转换成int
+si + 3.14;
+//内置类型转换将所得的int继续转换成double
+```
+因为类型转换运算符是隐式执行的，所以无法给这些函数传递实参，当然也就不能在类型转换运算符的定义中使用任何形参。同时，尽管类型转换函数不负责指定返回类型，但实际上每个类型转换函数都会返回一个对应类型的值:
+```
+class SmallInt;
+operator int (SmallInt&) ;
+//错误:不是成员函数
+class SmallInt {
+public:
+    int operator int() const;
+    //错误:指定了返回类型
+    operator int(int = 0) const ;
+    //错误:参数列表不为空
+    operator int*() const { return 42; } // 错误: 42不是一个指针
+};
+```
+和使用重载运算符的经验一样，明智地使用类型转换运算符也能极大地简化类设计者的工作，同时使得使用类更加容易。然而，如果在类类型和转换类型之间不存在明显的映射关系，则这样的类型转换可能具有误导性。例如，假设某个类表示Date,我们也许会为它添加一个从Date到int的转换。问题在于Date类型的对象和int类型的值之间不存在明确的一对一映射关系。因此在此例中，不定义该类型转换运算符也许会更好。作为替代的手段，类可以定义一个或多个普通的成员函数以从各种不同形式中提取所需的信息
 
 
 
