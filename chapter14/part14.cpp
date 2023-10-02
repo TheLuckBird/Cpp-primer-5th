@@ -8,6 +8,7 @@
 #include "Cmp.h"
 #include "Strsize.h"
 #include "SmallInt.h"
+#include "B.h"
 
 using namespace std;
 
@@ -138,7 +139,19 @@ int main(int argc, char const *argv[])
 
     SmallInt si;
     si = 4;
-    cout << si +3 << endl;
+    cout << si + SmallInt(3.3) << endl;
+    
+    // int i = 42;
+    // cin >> i;
+
+    // B b;
+    // f(b);
+
+    // long double x;
+    // B b2(x);
+
+    // short y;
+    // B b3(y);
 
     return 0;
 }

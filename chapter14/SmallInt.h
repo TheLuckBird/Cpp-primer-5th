@@ -3,14 +3,21 @@
 
 using namespace std;
 
-class SmallInt {
+class SmallInt 
+{
+friend
+    SmallInt operator+ (const SmallInt &, const SmallInt &) ;
 public:
-    SmallInt (int i = 0) : val(i)
+    SmallInt (double i = 0) : val(i)
     {
         if (i< 0|| i> 255)
             throw out_of_range("Bad SmallInt value") ;
     }
-    operator int() const{return val; }
+    operator double() const{return val; }
 private :
-    size_t val;
+    double val;
 };
+SmallInt operator+ (const SmallInt &a, const SmallInt &b) 
+{
+    return a.val + b.val;
+}
