@@ -5896,15 +5896,221 @@ inti=s3+0;
 ### 15.1 OOP:概述
 面向对象程序设计(object-oriented programming)的核心思想是数据抽象、继承和动态绑定。通过使用数据抽象，我们可以将类的接口与实现分离;使用继承，可以定义相似的类型并对其相似关系建模;使用动态绑定，可以在一定程度上忽略相似类型的区别，而以统一的方式使用它们的对象。
 
+通过继承(inheritance)联系在一起的类构成一种层次关系。通常在层次关系的根部有一个基类(base class)，其他类则直接或间接地从基类继承而来，这些继承得到的类称为派生类(derived class)。基类负责定义在层次关系中所有类共同拥有的成员，而每个派生类定义各自特有的成员。
 
+在C++语言中，基类将类型相关的函数与派生类不做改变直接继承的函数区分对待。对于某些函数，基类希望它的派生类各自定义适合自身的版本，此时基类就将这些函数声明成虚函数(virtual function)。因此，我们可以将Quote类编写成:
+```
+class Quote {
+public:
+    std: :string isbn() const;
+    virtual double net_price(std: :size_ _t n) const;
+};
+```
+派生类必须通过使用类派生列表(class derivation list)明确指出它是从哪个(哪些)基类继承而来的。类派生列表的形式是:首先是一个冒 号，后面紧跟以逗号分隔的基类列表，其中每个基类前面可以有访问说明符:
+```
+class Bulk_quote : public Quote {
+    // Bulk_quote 继承了Quote
+public:
+    double net_price(std: :size_ t) const override;
+};
+```
+因为Bulk_quote 在它的派生列表中使用了public 关键字，因此我们完全可以把Bulk quote的对象当成Quote的对象来使用。
 
+派生类必须在其内部对所有重新定义的虚函数进行声明。派生类可以在这样的函数之前加上virtual关键字，但是并不是非得这么做。C++11新标准允许派生类显式地注明它将使用哪个成员函数改写基类的虚函数，具体措施是在该函数的形参列表之后增加一个override关键字。
 
+通过使用动态绑定(dynamic_binding)， 我们能用同一-段代码分别处理Quote和Bulk_quote的对象。
+```
+//计算并打印销售给定数量的某种书籍所得的费用
+double print_ total (ostream &os,const Quote &item, size_t n)
+{
+    //根据传入item形参的对象类型调用Quote::net_price
+    //或者Bulk_ quote: :net_ _price
+    double ret = item.net_ price (n) ;
+    os << "ISBN: " << item. isbn()
+    //调用Quote: :isbn
+    <<"#sold:"<<n<<”totaldue:”<<ret<<endl;
+    return ret;
+}
+```
+因为函数print_total的item形参是基类Quote的一个引用，我们既能使用基类Quote的对象调用该函数，也能使用派生类Bulk_quote 的对象调用它;又因为print_total是使用引用类型调用net_price函数的，，实际传入print_total 的对象类型将决定到底执行net_ price的哪个版本
+```
+// basic的类型是Quote; bulk的类型是Bulk_quote 
+print_total (cout, basic, 20) ;
+//调用Quote的net_price
+print_total (cout, bulk， 20) ;
+//调用Bulk_quote的net_price
+```
+因为在上述过程中函数的运行版本由实参决定，即在运行时选择函数的版本，所以动态绑定有时又被称为运行时绑定(run- time _binding)。
 
+在C++语言中，当我们使用基类的引用(或指针)调用一个虚函数时将发生动态绑定
 
+### 15.2 定义基类和派生类
+定义基类  
+```
+class Quote {
+public:
+    Quote() = default;
+    Quote (const std: :string &book, double sales_ _price) :
+    bookNo (book)，price (sales_ price) { }
+    std: :string isbn() const { return bookNo;}
+    //返回给定数量的书籍的销售总额.
+    //派生类负责改写并使用不同的折扣计算算法
+    virtual double net_ price(std: :size_ t n) const
+    { return n * price;}
+    virtual ~Quote() = default; // 对析构函数进行动态绑定
+private :
+    std: :string bookNo;
+    //书籍的ISBN编号
+    protected:
+    double price = 0.0;
+    //代表普通状态下不打折的价格
+};
+```
+基类通常都应该定义一个虚析构函数，即使该函数不执行任何实际操作也是如此。
 
+成员函数与继承  
+派生类可以继承其基类的成员,派生类需要对这些成员提供自己的新定义以覆盖(override)从基类继承而来的旧定义。
 
+在C++语言中，基类必须将它的两种成员函数区分开来:一种是基类希望其派生类进行覆盖的函数:另一种是基类希望派生类直接继承而不要改变的函数。对于前者，基类通常将其定义为虚函数(virtua1)。当我们使用指针或引用调用虚函数时，该调用将被动态绑定。根据引用或指针所绑定的对象类型不同，该调用可能执行基类的版本，也可能执行某个派生类的版本。
 
+基类通过在其成员函数的声明语句之前加上关键字virtual使得该函数执行动态绑定。任何构造函数之外的非静态函数都可以是虚函数。关键字virtual只能出现在类内部的声明语句之前而不能用于类外部的函数定义。如果基类把一个函数声明成虚函数，则该函数在派生类中隐式地也是虚函数。
 
+成员函数如果没被声明为虚函数，则其解析过程发生在编译时而非运行时。isbn函数的执行与派生类的细节无关，不管作用于Quote对象还是Bulk_quote对象，isbn函数的行为都一样。在我们的继承层次关系中只有一个isbn函数，因此也就不存在调用isbn时到底执行哪个版本的疑问。
+
+访问控制与继承  
+派生类可以继承定义在基类中的成员，但是派生类的成员函数不一定有权访问从基类继承而来的成员。派生类能访问公有成员，而不能访问私有成员。不过在某些时候基类中还有这样一种成员，基类希望它的派生类有权访问该成员，同时禁止其他用户访问。我们用受保护的(protected) 访问运算符说明这样的成员。
+
+Quote类希望它的派生类定义各自的net_price 函数，因此派生类需要访问Quote的price成员。此时我们将price定义成受保护的。与之相反，派生类访问bookNo成员的方式与其他用户是一样的，都是通过调用isbn函数，因此bookNo被定义成私有的，即使是Quote派生出来的类也不能直接访问它。
+
+派生类必须通过使用类派生列表(class derivation list)明确指出它是从哪个(哪些)基类继承而来的。类派生列表的形式是:首先一个冒号，后面紧跟以逗号分隔的基类列表，其中每个基类前面可以有以下三种访问说明符中的一个:public、protected或者private。
+
+派生类必须将其继承而来的成员函数中需要覆盖的那些重新声明
+```
+class Bulk_quote : public Quote {
+// Bulk_ quote继承自Quote
+public:
+    Bulk_ quote() = default;
+    Bulk_ quote (const std: :string&，double, std: :size_ t, double) ;
+    //覆盖基类的函数版本以实现基于大量购买的折扣政策
+    double net_ price(std: :size_ t) const override;
+private:
+    std: :size_ t min_ qty = 0;
+    //适用折扣政策的最低购买量
+    double discount = 0.0;
+    //以小数表示的折扣额
+};
+```
+访问说明符的作用是控制派生类从基类继承而来的成员是否对派生类的用户可见。如果一个派生是公有的，则基类的公有成员也是派生类接口的组成部分。此外，我们能将公有派生类型的对象绑定到基类的引用或指针上。因为我们在派生列表中使用了public,所以Bulk_ quote 的接口隐式地包含isbn函数，同时在任何需要Quote的引用或指针的地方我们都能使用Bulk_ quote的对象。
+
+大多数类都只继承自一个类，这种形式的继承被称作“单继承”，它构成了本章的主题。
+
+派生类中的虛函数  
+如果派生类没有覆盖其基类中的某个虚函数,则该虚函数的行为类似于其他的普通成员，派生类会直接继承其在基类中的版本。派生类可以在它覆盖的函数前使用virtual关键字，但不是非得这么做。C++11新标准允许派生类显式地注明它使用某个成员函数覆盖了它继承的虚函数。具体做法是在形参列表后面、或者在const成员函数的const关键字后面、或者在引用成员函数的引用限定符后面添加一个关键字override.
+
+派生类对象及派生类向基类的类型转换   
+一个派生类对象包含多个组成部分:一个含有派生类自己定义的(非静态)成员的子对象，以及一个与该派生类继承的基类对应的子对象，如果有多个基类，那么这样的子对象也有多个。因此，一个Bulk_ quote对象将包含四个数据元素:它从Quote继承而来的bookNo和price数据成员，以及Bulk_ quote 自己定义的min_ _qty 和discount成员。
+
+C++标准并没有明确规定派生类的对象在内存中如何分布
+![Alt text](image-80.png)  
+因为在派生类对象中含有与其基类对应的组成部分，所以我们能把派生类的对象当成基类对象来使用，而且我们也能将基类的指针或引用绑定到派生类对象中的基类部分上。
+```
+Quote item;
+//基类对象
+Bulk_ quote bulk;
+// 派生类对象
+Quote *p = &item;
+// p指向Quote对象
+P = &bulk;
+//p指向bulk的Quote部分
+Quote &r = bulk;
+// r绑定到bulk的Quote部分
+```
+这种转换通常称为派生类到基类的(derived-to-base) 类型转换。和其他类型转换一样，编译器会隐式地执行派生类到基类的转换。这种隐式特性意味着我们可以把派生类对象或者派生类对象的引用用在需要基类引用的地方:同样的，我们也可以把派生类对象的指针用在需要基类指针的地方。
+
+在派生类对象中含有与其基类对应的组成部分，这一事实是继承的关键所在。
+
+派生类构造函数   
+尽管在派生类对象中含有从基类继承而来的成员，但是派生类并不能直接初始化这些成员。和其他创建了基类对象的代码一样，派生类也必须使用基类的构造函数来初始化它的基类部分。
+
+每个类控制它自己的成员初始化过程。
+
+派生类对象的基类部分与派生类对象自己的数据成员都是在构造函数的初始化阶段执行初始化操作的。类似于我们初始化成员的过程，派生类构造函数同样是通过构造函数初始化列表来将实参传递给基类构造函数的。
+```
+Bulk_ quote (const std: :string& book, double p,
+std: :size_ t qty, double disc) :
+Quote (book, p)， min_ qty(qty)，discount (disc) { }
+//与之前一致
+```
+除非我们特别指出，否则派生类对象的基类部分会像数据成员一样执行默认初始化。如果想使用其他的基类构造函数,我们需要以类名加圆括号内的实参列表的形式为构造函数提供初始值。这些实参将帮助编译器决定到底应该选用哪个构造函数来初始化派生类对象的基类部分。
+
+首先初始化基类的部分、然后按照声明的顺序依次初始化派生类的成员
+
+继承与静态成员  
+如果基类定义了一个静态成员，则在整个继承体系中只存在该成员的唯一定义。不论从基类中派生出来多少个派生类，对于每个静态成员来说都只存在唯一的实例。
+```
+class Base {
+public:
+    static void statmem() ;
+};
+class Derived : public Base {
+    void f (const Derived&) ;
+};
+```
+静态成员遵循通用的访问控制规则，如果基类中的成员是private的，则派生类无权访问它。假设某静态成员是可访问的，则我们既能通过基类使用它也能通过派生类使用它
+```
+void Derived::f(const Derived &derived_obj ){
+Base: :statmem() ;
+//正确: Base定义了statmem
+Derived: :statmem() ;
+//正确: Derived继承了statmem
+//正确:派生类的对象能访问基类的静态成员
+derived_ _obj .statmem() ;
+//通过Derived对象访问
+statmem() ;
+//通过this对象访问
+}
+```
+派生类的声明  
+派生类的声明与其他类差别不大，声明中包含类名但是不包含它的派生列表:
+```
+class Bulk_ quote : public Quote; 
+// 错误:派生列表不能出现在这里
+class Bulk_ quote;
+//正确:声明派生类的正确方式
+```
+一条声明语句的且的是令程序知晓某个名字的存在以及该名字表示一个什么样的实体，如一个类、一个函数或一个变量等。派生列表以及与定义有关的其他细节必须与类的主体一起出现。
+
+被用作基类的类   
+如果我们想将某个类用作基类，则该类必须已经定义而非仅仅声明:
+```
+class Quote; .
+//声明但未定义
+//错误: Quote必须被定义
+class Bulk_ quote : public Quote { ... };
+```
+这一规定的原因显而易见:派生类中包含并且可以使用它丛基类继承而来的成员，为了使用这些成员，派生类当然要知道它们是什么。因此该规定还有一-层隐含的意思，即一-个类不能派生它本身。
+一个类是基类，同时它也可以是一个派生类:
+```
+class Base { /* ... */ };
+class D1: public Base { /* ... */ } ;
+class D2: public D1 { /* ... */ };
+```
+在这个继承关系中，Base是D1的直接基类(direct base),同时是D2的间接基类( indirect base)。直接基类出现在派生列表中，而间接基类由派生类通过其直接基类继承而来。每个类都会继承直接基类的所有成员。对于一个最终的派生类来说，它会继承其直接基类的成员;该直接基类的成员又含有其基类的成员:依此类推直至继承链的顶端。因此，最终的派生类将包含它的直接基类的子对象以及每个间接基类的子对象。
+
+防止继承的发生  
+有时我们会定义这样一-种类， 我们不希望其他类继承它，或者不想考虑它是否适合作为一个基类。为了实现这一目的，C++11新标准提供了一种防止继承发生的方法，即在类名后跟一个关键字final:
+```
+class NoDerived final { /* */ };
+// NoDerived 不能作为基类
+class Base { /* */ };
+// Last是final的;我们不能继承Last
+class Last final : Base { /* */ };
+// Last 不能作为基类.
+class Bad : NoDerived { /* */ };
+//错误: NoDerived是final的
+class Bad2 : Last { /* */ };
+//错误: Last是final的
+```
 
 
 
