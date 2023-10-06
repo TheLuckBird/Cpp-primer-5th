@@ -37,5 +37,12 @@ int main(int argc, char const *argv[])
     x.debug();
     Quote *y = &b;
     y->debug();
+
+    // b.discount_policy();
+    // y->discount_policy();
+    
+
+    // Disc_quote d;//error: cannot declare variable 'd' to be of abstract type 'Disc_quote' Disc_quote d;
+
     return 0;
 }
