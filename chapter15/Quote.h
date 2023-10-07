@@ -15,6 +15,16 @@ public:
     string isbn() const{return bookNo;}
     virtual double net_price(size_t n) const{return n*price;};
     virtual void debug() const;
+    
+#ifdef REFMEMS
+    virtual Quote* clone() const & {return new Quote(*this);}
+    virtual Quote* clone() && {return new Quote(std::move(*this));}
+#else
+	// without reference qualification on member functions
+	// we can't overloaded on rvalue reference and const lvalue reference
+	// so for now we just implement a single version that copies itself
+    virtual Quote* clone() const {return new Quote(*this);}
+#endif
 
 private:
     string bookNo;
