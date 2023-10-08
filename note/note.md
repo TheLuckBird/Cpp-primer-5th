@@ -6911,10 +6911,116 @@ cout << basket.back()->net_ price(15) << endl;
 
 值得注意的是，我们将basket定义成shared_ prt<Quote>， 但是在第二个push_ back中传入的是一个Bulk_ _quote 对象的shared_ ptr。 正如我们可以将一个派生类的普通指针转换成基类指针一样，我们也能把一个派生类的智能指针转换成基类的智能指针。在此例中，make_ shared<Bulk_ quote>返回一个shared_ ptr<Bulk_ _quote>对象， 当我们调用push__back时该对象被转换成shared_ ptr<Quote>。 因此尽管在形式上有所差别，但实际上basket的所有元素的类型都是相同的。
 
+## 第16章 模板与泛型编程
+模板是C++中泛型编程的基础。一个模板就是一个创建类或函数的蓝图或者说公式。当使用一个vector这样的泛型类型，或者find这样的泛型函数时，我们提供足够的信息，将蓝图转换为特定的类或函数。这种转换发生在编译时。
+ 
+### 16.1 定义模板   
+假定我们希望编写一个函数来比较两个值，并指出第一-个值是小于、等于还是大于第二个值。在实际中，我们可能想要定义多个函数，每个函数比较一种给定类 型的值。我们的初次尝试可能定义多个重载函数:
+```
+//如果两个值相等，返回0，如果v1小返回-1，如果v2小返回1
+int compare (const string &v1, const string &v2)
+{
+    if (v1 < v2) return -1;
+    if (v2 < v1) return 1;
+    return 0;
+}
+int compare (const double &v1， const double &v2)
+{
+    if (v1 < v2) return -1;
+    if (v2 < v1) return 1;
+    return 0;
+}
+```
+这两个函数几乎是相同的，唯一的差异是参数的类型，函数体则完全一一样。如果对每种希望比较的类型都不得不重复定义完全=样的函数体，是非常烦琐且容易出错的。更麻烦的是，在编写程序的时候，我们就要确定可能要compare的所有类型。如果希望能在用户提供的类型上使用此函数，这种策略就失效了。
 
+我们可以定义一个通用的函数模板(function template)，而不是为每个类型都定义一个新函数。一个函数模板就是一个公式，可用来生成针对特定类型的函数版本。compare的模板版本可能像下面这样:
+```
+template <typename T>
+int compare (const T &v1， const T &v2)
+{
+if (v1 < v2) return -1;
+if (v2 < v1) return 1;
+return 0;
+}
+```
+模板定义以关键字template开始，后跟一个模板参数列表(template parameter list), 这是一个逗号分隔的一个或多个模板参数( template parameter)的列表，用小于号(<)和大于号(>)包围起来。
 
+在模板定义中， 模板参数列表不能为空。
 
+模板参数列表的作用很像函数参数列表。函数参数列表定义了若干特定类型的局部变量，但并未指出如何初始化它们。在运行时，调用者提供实参来初始化形参。
 
+类似的，模板参数表示在类或函数定义中用到的类型或值。当使用模板时，我们(隐式地或显式地)指定模板实参(template argument)，将其绑定到模板参数上。我们的compare函数声明了一个名为T的类型参数。在compare中，我们用名字T表示一个类型。而T表示的实际类型则在编译时根据compare的使用情况来确定。
+
+实例化函数模板  
+当我们调用一个函数模板时，编译器(通常)用函数实参来为我们推断模板实参。当编译器实例化一个模板时，它使用实际的模板实参代替对应的模板参数来创建出模板的一个新“实例”。
+```
+//实例化出int compare (const int&， const int&)
+cout << compare(1, 0) << endl; // T为int
+//实例化出int compare (const vector<int>&, const vector<int>&)
+vector<int> vec1{1, 2，3}， vec2{4， 5，6} ;
+cout << compare(vec1, vec2) << endl; // T为vector<int>
+```
+编译器会实例化出两个不同版本的compare。 对于第一个调用，编译器会编写并编译一个compare版本，其中T被替换为int:
+```
+int compare (const int &v1， const int &v2)
+{
+if (v1 < v2) return -1;
+if (v2 < v1) return 1;
+return 0;
+}
+```
+对于第二个调用，编译器会生成另一个compare版本，其中T被替换为vector<int>.这些编译器生成的版本通常被称为模板的实例(instantiation)。
+
+模板类型参数  
+我们的compare函数有一个模板类型 参数(type parameter)。一般来说，我们可以将类型参数看作类型说明符，就像内置类型或类类型说明符一样使用。 特别是，类型参数可以用来指定返回类型或函数的参数类型，以及在函数体内用于变量声明或类型转换:
+```
+//正确:返回类型和参数类型相同
+template <typename T> T foo(T* p){
+    Ttmp=*p;//tmp的类型将是指针p指向的类型
+    //...
+    return tmp;
+}
+```
+类型参数前必须使用关键字class或typename:
+```
+//错误: U之前必须加上class或typename
+template <typename T，U> T calc(const T&,
+const U&) ;
+```
+在模板参数列表中，这两个关键字的含义相同，可以互换使用。一个模板参数列表中可以同时使用这两个关键字:
+```
+//正确:在模板参数列表中，typename和class没有什么不同
+template <typename T，class U> calc (const T&，const U&) ;
+```
+看起来用关键字typename来指定模板类型参数比用class更为直观。毕竟，我们可以用内置(非类)类型作为模板类型实参。而且，typename 更清楚地指出随后的名字是一个类型名。但是，typename是在模板已经广泛使用之后才引入C++语言的，某些程，序员仍然只用class。
+
+韭类型模板参数  
+除了定义类型参数，还可以在模板中定义非类型参数(nontype parameter)。 一个非类型参数表示一个值而非一个类型。我们通过一个特定的类型名而非关键字class 或typename来指定非类型参数。
+
+**当一个模板被实例化时，非类型参数被一个用户提供的或编译器推断出的值所代替**。这些值必须是常量表达式，从而允许编译器在编译时实例化模板。
+
+编写一个compare版本处理字符串字面常量。这种字面常量是const char的数组。由于不能拷贝一个数组，所以我们将自己的参数定义为数组的引用。由于我们希望能比较不同长度的字符串字面常量，因此为模板定义了两个非类型的参数。第一个模板参数表示第一个数组的长度，第二个参数表示第二个数组的长度:、
+```
+template<unsigned N，unsigned M>
+int compare (const char (&p1) [N]，const char (&p2) [M])
+{
+return strcmp(p1, p2) ;
+}
+```
+当我们调用这个版本的compare时: 
+```
+compare ("hi","mom")
+```
+**编译器会使用字面常量的大小来代替N和M，从而实例化模板**。记住，编译器会在一个字
+符串字面常量的末尾插入一一个空字符作为终结符，因此编译器会实例化出如下版本:
+```
+int compare (const char (&p1) [3]，const char (&p2) [4])
+```
+一个非类型参数可以是一个整型，或者是一个指向对象或函数类型的指针或(左值)引用。绑定到非类型整型参数的实参必须是一个常量表达式。绑定到指针或引用非类型参数的实参必须具有静态的生存期。我们不能用一个普通(非static)局部变量或动态对象作为指针或引用非类型模板参数的实参，指针参数也可以用nullptr或一个值为0的常量表达式来实例化。
+
+在模板定义内，模板非类型参数是一个常量值。在需要常量表达式的地方，可以使用非类型参数，比如数组大小。
+
+非类型模板参数的模板实参必须是常量表达式。
 
 
 
