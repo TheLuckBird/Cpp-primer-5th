@@ -50,6 +50,8 @@ T self(shared_ptr<T> p)
     return *p;
 }//模板也可以重载啊
 
+// template<typename T> inline T min(const T&,const T&);//声明
+
 int main(int argc, char const *argv[])
 {
     // int i=1,j=4;
@@ -70,6 +72,8 @@ int main(int argc, char const *argv[])
     // // cout << self(new vector<int>{1,2}) << endl;
     // cout << self("pp") << endl;
     cout << compare("c","h") << endl;
+
+    // min(1,2);
 
     return 0;
 }
