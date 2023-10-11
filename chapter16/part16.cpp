@@ -3,6 +3,8 @@
 #include <vector>
 #include <memory>
 #include <cstring>
+#include <list>
+#include <algorithm>
 
 using namespace std;
 
@@ -11,7 +13,7 @@ class Test
 public:
     Test() = default;
     Test(int a_):a(a_){}
-    bool operator<(const Test &y)
+    bool operator<(const Test &y) const
     {
         return a < y.a;
     }
@@ -52,13 +54,28 @@ T self(shared_ptr<T> p)
 
 // template<typename T> inline T min(const T&,const T&);//声明
 
+template <typename I,typename T> I Find(I b,I e,const T &c)
+{
+    while(b!=e && *b!=c)
+        ++b;
+    cout << "自定义Find" << endl;
+    return b;
+}//find这么简单？
+
+template <typename M,size_t N> void print(const M (&a)[N])
+{
+    for(auto i=begin(a);i!=end(a);i++)
+        cout << *i << " " ;
+    cout << endl;
+}
+
 int main(int argc, char const *argv[])
 {
     // int i=1,j=4;
     // cout << compare(i,j) << endl;
     // cout << compare(1,2) << endl;
-    cout << compare(string("cpp"),string("java")) << endl;
-    // Test a(1);
+    // cout << compare(string("cpp"),string("java")) << endl;
+    // Test a(5);
     // Test b(2);
     // cout << compare(a,b) << endl;
     // // cout << (a<b) << endl;
@@ -71,9 +88,20 @@ int main(int argc, char const *argv[])
     // cout << self(new string("cpp primer")) << endl;
     // // cout << self(new vector<int>{1,2}) << endl;
     // cout << self("pp") << endl;
-    cout << compare("c","h") << endl;
+    // cout << compare("c","h") << endl;
 
     // min(1,2);
+
+    // vector<int> ivec{0,2,1,3,5};
+    // cout << (Find(ivec.begin(),ivec.end(),56)==ivec.end() ? "没有找到" : "找到了") << endl;
+    // list<string> ls{"cpp","primer"};
+    // cout << (find(ls.begin(),ls.end(),"cpp2")==ls.end() ? "没有找到" : "找到了") << endl;
+
+    int ivec[4] = {1,23,0,88};
+    print(ivec);
+    string svec[2] = {"cpp","primer"};
+    print(svec);
+    print("hello");
 
     return 0;
 }
