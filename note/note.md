@@ -7096,12 +7096,193 @@ cout << compare (datal, data2) << endl; // 错误: Sales_ data 未定义<
 
 保证传递给模板的实参支持模板所要求的操作，以及这些操作在模板中能正确工作，是调用者的责任。
 
+类模板(class template) 是用来生成类的蓝图的。与函数模板的不同之处是，编译器不能为类模板推断模板参数类型。为了使用类模板，我们必须在模板名后的尖括号中提供额外信息一用来代替模板参数的模板实参列表。
 
+类似函数模板，类模板以关键字template开始，后跟模板参数列表。在类模板(及其成员)的定义中,我们将模板参数当作替身，代替使用模板时用户需要提供的类型或值:
+```
+template <typename T> class Blob {
+	// each instantiation of Blob grants access to the version of
+	// BlobPtr and the equality operator instantiated with the same type
+	friend class BlobPtr<T>;
+	friend bool operator==<T>
+	       (const Blob<T>&, const Blob<T>&);
+public:
+	typedef T value_type;
+	typedef typename std::vector<T>::size_type size_type;
 
+	// constructors
+	Blob(); 
+	Blob(std::initializer_list<T> il);
+	template <typename It> Blob(It b, It e); 
+	Blob(T*, std::size_t);
 
+	// return BlobPtr to the first and one past the last elements
+	BlobPtr<T> begin() { return BlobPtr<T>(*this); }
+	BlobPtr<T> end() 
+	    { auto ret = BlobPtr<T>(*this, data->size()); 
+	      return ret; }
 
+	// number of elements in the Blob
+	size_type size() const { return data->size(); }
+	bool empty() const { return data->empty(); }
 
+	// add and remove elements
+	void push_back(const T &t) {data->push_back(t);}
+	void push_back(T &&t) { data->push_back(std::move(t)); }
+	void pop_back();
 
+	// element access
+	T& front();
+	T& back();
+	T& at(size_type);
+	const T& back() const;
+	const T& front() const;
+	const T& at(size_type) const;
+	T& operator[](size_type i); 
+	const T& operator[](size_type i) const;
+
+	void swap(Blob &b) { data.swap(b.data); }
+private:
+	std::shared_ptr<std::vector<T>> data; 
+
+	// throws msg if data[i] isn't valid
+	void check(size_type i, const std::string &msg) const;
+};
+```
+实例化类模板  
+当使用一个类模板时，我们必须提供额外信息。我们现在知道这些额外信息是显式模板实参( explicit template argument)列表，它们被绑定到模板参数。编译器使用这些模板实参来实例化出特定的类。
+
+为了用我们的Blob模板定义一个类型，必须提供元素类型
+```
+Blob<int> ia;
+// 空Blob<int>
+Blob<int> ia2 = {0,1,2,3,4}; // 有5个元素的Blob<int>
+```
+ia和ia2使用相同的特定类型版本的Blob (即Blob<int>)。从这两个定义，编译器
+会实例化出一个等价的类
+
+当编译器从我们的Blob模板实例化出一个类时，它会重写Blob模板，将模板参数T的每个实例替换为给定的模板实参，对我们指定的每一种元素类型， 编译器都生成一个不同的类:
+```
+//下面的定义实例化出两个不同的Blob类型
+Blob<string> names; // 保存string的Blob 
+Blob<double> prices;// 不同的元素类型
+```
+这两个定义会实例化出两个不同的类。names的定义创建了一个Blob类，每个T都被替换为string。prices 的定义生成了另一个Blob类，T被替换为double.
+
+一个类模板的每个实例都形成一个独立的类。类型Blob<string> 与任何其他Blob类型都没有关联,也不会对任何其他Blob类型的成员有特殊访问权限。
+
+在模板作用域中引用模板类型  
+为了阅读模板类代码，应该记住类模板的名字不是一个类型名。类模板用来实例化类型，而一个实例化的类型总是包含模板参数的。可能令人迷惑的是，一个类模板中的代码如果使用了另外一个模板，通常不将一个实际类型(或值)的名字用作其模板实参。相反的，我们通常将模板自己的参数当作被使用模板的实参。
+
+data成员使用了两个模板，vector 和shared_ptr.我们知道，无论何时使用模板都必须提供模板实参。在本例中，我们提供的模板实参就是Blob的模板参数。因此，data的定义如下:
+```
+std::shared ptr<std::vector<T>> data;
+```
+它使用了Blob 的类型参数来声明data是一个shared_ptr的实例，此shared_ptr指向一个保存类型为T的对象的vector实例。当我们实例化一个特定类型的 Blob，例如Blob<string>时，data会成为:`shared_ptr<vector<string>>`
+
+类模板的成员函数   
+既可以在类模板内部，也可以在类模板外部为其定义成员函数，且定义在类模板内的成员函数被隐式声明为内联函数。
+
+类模板的成员函数本身是一个普通函数。但是，类模板的每个实例都有其自己版本的成员函数。因此，类模板的成员函数具有和模板相同的模板参数。因而，定义在类模板之外的成员函数就必须以关键字template开始，后接类模板参数列表。
+
+当我们在类外定义一个成员时，必须说明成员属于哪个类。而且，从一个模板生成的类的名字中必须包含其模板实参。当我们定义一个成员函数时，模板实参与模板形参相同。即，对于StrBlob的一个给定的成员函数
+```
+ret- type StrB1ob: : member-name(parm-list)
+//对应的Blob的成员应该是这样的:
+template <typename T>
+ret-type Blob<T>: :member-name(parm-list)
+```
+
+类模板成员函数的实例化  
+默认情况下，一个类模板的成员函数只有当程序用到它时才进行实例化。
+```
+//实例化Blob<int>和接受initializer_ list<int>的构造函数
+Blob<int> squares = {0,1,2,3,4,5,6, 7,8,9};
+//实例化Blob<int>: :size() const
+for (size_ t i = 0; i != squares.size(); ++i)
+squares[i] = i*i; //实例化Blob<int>: :operator[] (size_ t)
+```
+如果一个成员函数没有被使用，则它不会被实例化。成员函数只有在被用到时才进行实例化，这特性使得即使某种类型不能完全符合模板操作的要求，我们仍然能用该类型实例化类。
+
+默认情况下，对于一个实例化了的类模板，其成员只有在使用时才被实例化。
+
+在类代码内简化模板类名的使用  
+当我们使用一个类模板类型时必须提供模板实参，但这一规则有一个例外。在类模板自己的作用域中，我们可以直接使用模板名而不提供实参: 
+```
+//若试图访问一个不存在的元素，BlobPtr抛出一个异常
+template <typename T> class BlobPtr {
+public:
+BlobPtr(): curr(0) { }
+BlobPtr(Blob<T> &a, size_ t sz = 0):
+wptr (a.data), curr(sz) { }
+T& operator* () const
+{ auto P = check (curr, "dereference past end") ;
+return (*p) [curr]; // (*p) 为本对象指向的vector
+}
+//递增和递减
+BlobPtr& operator++(); //前置运算符
+BlobPtr& operator--() ;
+private:
+//若检查成功，check返回一个指向vector的shared_ ptr
+std: :shared_ ptr<std: :vector<T>>
+check(std: :size_ t, const std: :string&) const;
+//保存一个weak_ _ptr,表示底层vector可能被销毁
+std: :weak_ ptr<std: :vector<T>> wptr;
+std::size_ t curr; // 数组中的当前位置
+};
+```
+细心的读者可能已经注意到，BlobPtr 的前置递增和递减成员返回BlobPtr&，而不是BlobPtr<T>&。当我们处于一个类模板的作用域中时，编译器处理模板自身引用时就好像我们已经提供了与模板参数匹配的实参一样。 即，就好像我们这样编写代码一样:
+```
+BlobPtr<T>& operator++ () ;
+BlobPtr<T>& operator--() ;
+
+```
+在类模板外使用类模板名   
+当我们在类模板外定义其成员时，必须记住，我们并不在类的作用域中，直到遇到类名才表示进入类的作用域
+```
+//后置:递增/递减对象但返回原值
+template <typename T>
+B1obPtr<T> BlobPtr<T>: :operator++ (int)
+{
+//此处无须检查;调用前置递增时会进行检查
+BlobPtr ret = *this; //保存当前值
+++*this;
+//推进一个元素;前置++检查递增是否合法
+return ret; // 返回保存的状态
+```
+由于返回类型位于类的作用域之外，我们必须指出返回类型是一个实例化的BlobPtr,它所用类型与类实例化所用类型一致。 在函数体内，我们已经进入类的作用域，因此在定义ret时无须重复模板实参。如果不提供模板实参，则编译器将假定我们使用的类型与成员实例化所用类型一致。因此，ret的定义与如下代码等价:`BlobPtr<T> ret = *this;`
+
+在一个类模板的作用域内，我们可以直接使用模板名而不必指定模板实参。
+
+类模板和友元  
+当一个类包含一个友元声明时，类与友元各自是否是模板是相互无关的。如果一个类模板包含一个非模板友元，则友元被授权可以访问所有模板实例。如果友元自身是模板，类可以授权给所有友元模板实例，也可以只授权给特定实例。
+
+一对一友好关系  
+类模板与另一个(类或函数)模板间友好关系的最常见的形式是建立对应实例及其友元间的友好关系。为了引用(类或函数)模板的一个特定实例，我们必须首先声明模板自身。一个模板声明包括模板参数列表
+```
+//前置声明，在Blob中声明友元所需要的
+template <typename> class BlobPtr;
+template <typename> class Blob; // 运算符==中的参数所需要的
+template <typename T>
+bool operator== (const Blob<T>&，const Blob<T>&) ;
+template <typename T> class Blob {
+//每个Blob实例将访问权限授予用相同类型实例化的BlobPtr和相等运算符
+friend class BlobPtr<T>;
+friend bool operator==<T>
+(const Blob<T>&， const Blob<T>&) ;
+//其他成员定义，与12.1.1 (第405页)相同
+};
+```
+我们首先将Blob、BlobPtr和operator==声明为模板。这些声明是operator==函数的参数声明以及Blob中的友元声明所需要的。
+
+友元的声明用Blob的模板形参作为它们自己的模板实参。因此，友好关系被限定在用相同类型实例化的Blob与BlobPtr相等运算符之间:
+```
+Blob<char> ca;
+// BlobPtr<char>和operator==<char>都是本对象的友元
+Blob<int> ia;
+// BlobPtr<int>和 operator==<int>都是本对象的友元
+```
+BlobPtr<char>的成员可以访问ca (或任何其他Blob<char>对象)的非public部分，但ca对ia (或任何其他Blob<int>对象)或Blob的任何其他实例都没有特殊访问权限。
 
 
 

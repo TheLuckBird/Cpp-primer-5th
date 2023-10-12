@@ -5,6 +5,7 @@
 #include <cstring>
 #include <list>
 #include <algorithm>
+#include "Blob.h"
 
 using namespace std;
 
@@ -97,11 +98,23 @@ int main(int argc, char const *argv[])
     // list<string> ls{"cpp","primer"};
     // cout << (find(ls.begin(),ls.end(),"cpp2")==ls.end() ? "没有找到" : "找到了") << endl;
 
-    int ivec[4] = {1,23,0,88};
-    print(ivec);
-    string svec[2] = {"cpp","primer"};
-    print(svec);
-    print("hello");
+    // int ivec[4] = {1,23,0,88};
+    // print(ivec);
+    // string svec[2] = {"cpp","primer"};
+    // print(svec);
+    // print("hello");
+
+    // Blob<int> data ({1,2,3}) ;
+
+    // for(size_t i=0;i!=data.size();++i)
+    //     data[i] = data[i]*data[i];
+    // for(size_t i=0;i!=data.size();++i)
+    //     cout << data[i] << " ";
+    // cout << endl;
+
+    // int a = 10;
+    // cout << (*(&a)) << endl;
+    // cout << *a << endl;
 
     return 0;
 }
