@@ -7284,10 +7284,165 @@ Blob<int> ia;
 ```
 BlobPtr<char>的成员可以访问ca (或任何其他Blob<char>对象)的非public部分，但ca对ia (或任何其他Blob<int>对象)或Blob的任何其他实例都没有特殊访问权限。
 
+通用和特定的模板友好关系  
+一个类也可以将另一个模板的每个实例都声明为自己的友元,或者限定特定的实例为友元:
+```
+//前置声明，在将模板的一个特定实例声明为友元时要用到
+template <typename T> class Pal; 
+classC{//C是一个普通的非模板类
+friend class Pal<C>; //用类C实例化的Pal是C的一个友元
+// Pal2的所有实例都是C的友元;这种情况无须前置声明
+template <typename T> friend class Pal2;
+};
+template <typename T> class C2 { // C2 本身是一个类模板
+// C2的每个实例将相同实例化的Pal声明为友元.
+friend class Pal<T>; // Pal 的模板声明必须在作用域之内
+// Pal2的所有实例都是C2的每个实例的友元，不需要前置声明
+template <typename X> friend class Pal2;
+// Pal3 是一个非模板类，它是C2所有实例的友元，
+friend class Pal3; //不需要Pal3的前置声明
+};
+```
 
+为了让所有实例成为友元，友元声明中必须使用与类模板本身不同的模板参数。
 
+令模板自己的类型参数成为友元  
+在新标准中，我们可以将模板类型参数声明为友元:
+```
+template <typename Type> class Bar {
+friend Type; // 将访问权限授予用来实例化Bar的类型
+//...
+};
+```
+将用来实例化Bar的类型声明为友元。因此，对于某个类型名Foo，Foo 将成为Bar<Foo>的友元，Sales_ data 将成为Bar<Sales_ data>的友元， 依此类推。
 
+虽然友元通常来说应该是一个类或是一个函数，但我们完全可以用一个内置类型来实例化Bar.这种与内置类型的友好关系是允许的，以便我们能用内置类型来实例化Bar这样的类。
 
+模板类型别名  
+类模板的一个实例定义了一个类类型，与任何其他类类型一样，我们可以定义一个typedef来引用实例化的类:`typedef Blob<string> StrBlob;`
+ 
+由于模板不是一个类型，我们不能定义一个typedef引用一个模板。即，无法定义一个typedef引用Blob<T>。但是，新标准允许我们为类模板定义一一个类型别名:
+```
+template<typename T> using twin = pair<T, T>;
+twin<string> authors; // authors 是一个pair<string, string>
+```
+在这段代码中，我们将twin定义为成员类型相同的pair的别名。这样，twin的用户只需指定一次类型。
+
+一个模板类型别名是一族类的别名:
+```
+twin<int> win_ loss; // win_ loss是一个pair<int, int>
+twin<double> area;
+// area是一个pair<double， double>
+```
+就像使用类模板一样，当我们使用twin时，需要指出希望使用哪种特定类型的twin。
+
+当我们定义一个模板类型别名时，可以固定一个或多个模板参数:  
+```
+template <typename T> using partNo = pair<T, unsigned>;
+partNo<string> books; // books是一个pair<string, unsigned>
+partNo<Vehicle> cars; // cars 是一个pair<Vehicle, unsigned>
+partNo<Student> kids; // kids 是一个pair<Student, uns igned>
+```
+这段代码中我们将partNo 定义为一族类型的别名，这族类型是second 成员为unsigned的pair partNo的用户需要指出pair的first成员的类型，但不能指定second成员的类型。
+
+类模板的static成员
+与任何其他类相同，类模板可以声明static成员:
+```
+template <typename T> class Foo {
+public:
+    static std: :size_ t count() { return ctr; }
+    //其他接口成员
+private:
+    static std: :size_ t ctr;
+    //其他实现成员
+};
+```
+在这段代码中，Foo是一个类模板，它有一个名为count的public static 成员函数和一个名为ctr的private static数据成员。每个Foo的实例都有其自己的static 成员实例。即，对任意给定类型x，都有一个Foo<X>: :ctr和一个Foo<X>: :count成员。所有Foo<X>类型的对象共享相同的ctr对象和count函数。
+```
+//实例化static成员Foo<string>: :ctr和Foo<string>: : count
+Foo<string> fs;
+//所有三个对象共享相同的Foo<int>: :ctr和Foo<int>: :count成员
+Foo<int> fi, fi2， fi3;
+```
+与任何其他static数据成员相同,模板类的每个static数据成员必须有且仅有一个定义。但是，类模板的每个实例都有一个独有的static对象。因此，与定义模板的成员函数类似，我们将static数据成员也定义为模板
+```
+template <typename T>
+size_ t Foo<T>: :ctr = 0; //定义并初始化ctr
+```
+与类模板的其他任何成员类似，定义的开始部分是模板参数列表，随后是我们定义的成员的类型和名字。与往常一样，成员名包括成员的类名，对于从模板生成的类来说，类名包括模板实参。因此，当使用一个特定的模板实参类型实例化Foo时，将会为该类类型实.例化一一个独立的ctr，并将其初始化为0。
+
+与非模板类的静态成员相同，我们可以通过类类型对象来访问一个类模板的static成员，也可以使用作用域运算符直接访问成员。当然，为了通过类来直接访问static成员，我们必须引用一个特定的实例:
+```
+Foo<int> fi;
+. //实例化Foo<int>类和static数据成员ctr
+auto ct = Foo<int>: :count(); // 实例化Foo<int>: :count
+ct = fi.count() ;
+//使用Foo<int>: :count
+ct = Foo: :count () ;
+//错误:使用哪个模板实例的count?
+```
+类似任何其他成员函数，一个static成员函数只有在使用时才会实例化。
+
+模板参数  
+类似函数参数的名字，一个模板参数的名字也没有什么内在含义。我们通常将类型参数命名为T，但实际上我们可以使用任何名字:
+```
+template <typename Foo> Foo calc(const Foo& a，const FoO& b)
+Foo tmp = a; // tmp 的类型与参数和返回类型一样
+//...
+return tmp; // 返回类型和参数类型一样
+```
+模板参数与作用域   
+模板参数遵循普通的作用域规则。一个模板参数名的可用范围是在其声明之后，至模板声明或定义结束之前。与任何其他名字- 样，模板参数会隐藏外层作用域中声明的相同名字。但是，与大多数其他上下文不同，在模板内不能重用模板参数名
+```
+typedef double A;
+template <typename A，typename B> void f(A a, B b)
+Atmp=a;//tmp的类型为模板参数A的类型，而非double
+double B;
+//错误:重声明模板参数B
+```
+正常的名字隐藏规则决定了A的typedef 被类型参数A隐藏。因此，tmp 不是一个double，其类型是使用f时绑定到类型参数A的类型。由于我们不能重用模板参数名，声明名字为B的变量是错误的。
+
+模板声明   
+模板声明必须包含模板参数:
+```
+//声明但不定义compare和Blob
+template <typename T> int compare (const T&，const T&) ;
+template <typename T> class Blob;
+```
+与函数参数相同，声明中的模板参数的名字不必与定义中相同:
+```
+//3个calc都指向相同的函数模板
+template <typename T> T calc(const T&，const T&); //声明
+template <typename U> U calc(const U&，const U&); //声明
+//模板的定义
+template <typename Type>
+Type calc(const Type& a, const Type& b) { /* ... */ }
+```
+一个给定模板的每个声明和定义必须有相同数量和种类(即，类型或非类型)的参数。
+
+一个特定文件所需要的所有模板的声明通常一起放置在文件开始位置，出现于任何使用这些模板的代码之前
+
+使用类的类型成员   
+我们用作用域运算符(::) 来访问static成员和类型成员。在普通(非模板)代码中，编译器掌握类的定义。因此，它知道通过作用域运算符访问的名字是类型还是static 成员。例如，如果我们写下string: :size_ type， 编译器有string的定义，从而知道size_ type 是一个类型。
+
+但对于模板代码就存在困难。例如，假定T是一个模板类型参数，当编译器遇到类似T: :mem这样的代码时，它不会知道mem是一 个类型成员还是一个 static数据成员，直至实例化时才会知道。但是，为了处理模板，编译器必须知道名字是否表示一个类型。假定T是-一个类型参数的名字，当编译器遇到如下形式的语句时:`T: :size_ type * P;`
+
+它需要知道我们是正在定义一个名为P的变量还是将一一个名为size_type的static数
+据成员与名为p的变量相乘。
+
+默认情况下，C++语言假定通过作用域运算符访问的名字不是类型。因此，如果我们希望使用一个模板类型参数的类型成员，就必须显式告诉编译器该名字是一个类型。我们通过使用关键字typename来实现这一点:
+```
+template <typename T>
+typename T: :value_ type top (const T& c)
+if (!c.empty())
+return c.back() ;
+el se
+return typename T: :value_ type() ;
+}
+```
+我们的top函数期待一个容器类型的实参，它使用typename指明其返回类型并在c中没有元素时生成一个值初始化的元素返回给调用者。
+
+当我们希望通知编译器一个名字表示类型时，必须使用关键字typename,而不能使用class。
 
 
 
