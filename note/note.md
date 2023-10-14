@@ -7444,6 +7444,284 @@ return typename T: :value_ type() ;
 
 当我们希望通知编译器一个名字表示类型时，必须使用关键字typename,而不能使用class。
 
+默认模板实参  
+可以提供默认模板实参(default template argument)。在新标准中，我们可以为函数和类模板提供默认实参。
+```
+// compare 有一个默认模板实参less<T>和一个默认函数实参F()
+template <typename T，typename F = less<T>>
+int compare (const T &v1, const T &v2, Ff= F()){
+if (f(v1, v2)) return -1;
+if (f(v2, v1)) return 1;
+return 0;
+}
+```
+我们为模板添加了第二个类型参数，名为F,表示可调用对象的类型;并定义了一个新的函数参数f，绑定到一个可调用对象上。
+
+我们为此模板参数提供了默认实参，并为其对应的函数参数也提供了默认实参。默认模板实参指出compare将使用标准库的less函数对象类，它是使用与compare一样的类型参数实例化的。默认函数实参指出f将是类型F的一个默认初始化的对象。
+
+当用户调用这个版本的compare时，可以提供自己的比较操作，但这并不是必需的:
+```
+bool i = compare(0， 42); //使用less; i为-1
+//结果依赖于iteml和item2中的isbn .
+Sales_ data iteml (cin)，item2 (cin) ;
+bool j = compare (item1，item2， compareIsbn) ;
+```
+第一个调用使用默认函数实参，即，类型less<T>的一个默认初始化对象。在此调用中，T为int，因此可调用对象的类型为less<int>。 compare的这个实例化版本将使用less<int>进行比较操作。
+
+在第二个调用中，我们传递给compare三个实参: compareIsbn和两个Sales_ _data 类型的对象。当传递给compare三个实参时，第三个实参的类型必须是一个可调用对象，该可调用对象的返回类型必须能转换为bool值，且接受的实参类型必须与compare的前两个实参的类型兼容。
+
+与往常一样，模板参数的类型从它们对应的函数实参推断而来。在此调用中，T的类型被推断为sales_data, F被推断为compareIsbn的类型。
+
+与函数默认实参-样,对于一个模板参数,只有当它右侧的所有参数都有默认实参时，它才可以有默认实参。
+
+模板默认实参与类模板  
+如果一个类模板为其所有模板参数都提供了默认实参，且我们希望使用这些默认实参，就必须在模板名之后跟一个空尖括号对
+```
+template <class T = int> class Numbers { // T默认为int
+public:
+Numbers(T v = 0): val(v) { }
+private:
+T val;
+};
+Numbers<long double> lots_ of_ precision;
+Numbers<> average_ precision; // 空<>表示我们希望使用默认类型
+```
+实例化了两个Numbers版本: average_ precision 是用int代替T实例化得到的; lots_ _of_ precision 是用long double代替T实例化而得到的。
+
+成员模板
+一个类(无论是普通类还是类模板)可以包含本身是模板的成员函数。这种成员被称为成员模板(membertemplate)。成员模板不能是虚函数。
+
+普通(非模板)类的成员模板   
+作为普通类包含成员模板的例子，我们定义一个类，类似unique_ ptr所使用的默认删除器类型。类似默认删除器，我们的类将包含一个重载的函数调用运算符，它接受一个指针并对此指针执行delete.
+
+由于希望删除器适用于任何类型，所以我们将调用运算符定义为一个模板:
+```
+//函数对象类，对给定指针执行delete
+class DebugDelete{
+public:
+DebugDelete (std: :ostream &s = std: :cerr): os(s) { }
+//与任何函数模板相同，T的类型由编译器推断
+template <typename T> void operator() (T *p) const
+{ os << "deleting unique_ ptr" << std: :endl; delete p; }
+private:
+std: :ostream &Os;
+};
+```
+与任何其他模板相同，成员模板也是以模板参数列表开始的。每个DebugDelete对象都有一个ostream成员，用于写入数据:还包含一个 自身是模板的成员函数。我们可以用这个类代替delete:
+```
+double* p = new double;
+DebugDelete d; // 可像delete表达式一样使用的对象
+d(p); //调用DebugDelete: :operator() (double*)，释放p .
+int* ip = new int;
+//在一个临时DebugDelete对象上调用operator() (int*) .
+DebugDelete() (ip) ;
+```
+由于调用一个DebugDelete 对象会delete 其给定的指针，我们也可以将DebugDelete用作unique_ ptr 的删除器。为了重载unique_ ptr 的删除器，我们在尖括号内给出删除器类型，并提供一个 这种类型的对象给unique_ ptr的构造函数:
+```
+//销毁p指向的对象
+//实例化DebugDelete: :operator()<int>(int *)
+unique_ ptr<int， DebugDelete> P (new int, DebugDelete()) ;
+//销毁sp指向的对象.
+//实例化DebugDelete: :operator ()<string> (string*)
+unique_ ptr<string， DebugDelete> sp (new string, DebugDelete());
+```
+声明p的删除器的类型为DebugDelete,并在p的构造函数中提供了该类型的一个未命名对象。unique_ ptr的析构函数会调用DebugDelete的调用运算符。因此，无论何时unique_ ptr的析构函数实例化时，DebugDelete 的调用运算符都会实例化:
+```
+// DebugDelete的成员模板实例化样例
+void DebugDelete: :operator() (int *p) const { delete p; }
+void DebugDelete: :operator() (string *p) const { delete p; }
+```
+
+类模板的成员模板   
+对于类模板，我们也可以为其定义成员模板。在此情况下，类和成员各自有自己的、
+独立的模板参数。
+
+为Blob类定义一个构造函数，它接受两个迭代器，表示要拷贝的元素范围。由于我们希望支持不同类型序列的迭代器，因此将构造函数定义为模板:
+```
+template <typename T> class Blob {
+template <typename It> B1ob(It b，It e) ;
+//...
+};
+```
+此构造函数有自己的模板类型参数It，作为它的两个函数参数的类型。
+
+与类模板的普通函数成员不同，成员模板是函数模板。当我们在类模板外定义一个成员模板时，必须同时为类模板和成员模板提供模板参数列表。类模板的参数列表在前，后跟成员自己的模板参数列表:
+```
+template <typename T>
+//类的类型参数
+template <typename It>
+//构造函数的类型参数
+B1ob<T>::Blob(It b, It e):data (std: :make_ shared<std: :vector<T>>(b，e)) { }
+```
+我们定义了一个类模板的成员，类模板有一个模板类型参数，命名为T。而成员自身是一个函数模板，它有一个名为It的类型参数。
+
+实例化与成员模板  
+为了实例化一个类模板的成员模板，我们必须同时提供类和函数模板的实参。我们在哪个对象上调用成员模板，编译器就根据该对象的类型来推断类模板参数的实参。与普通函数模板相同，编译器通常根据传递给成员模板的函数实参来推断它的模板实参
+```
+int ia[] = {0,1,2,3, 4,5,6, 7,8,9};
+vector<long> vi = {0,1,2,3,4,5,6, 7,8,9};
+list<const char*> w = {"now", "is", "the", "time"};
+//实例化Blob<int>类及其接受两个int*参数的构造函数
+Blob<int> al (begin(ia)，end(ia)) ;
+//实例化Blob<int>类的接受两个vector<long>: :iterator的构造函数
+Blob<int> a2 (vi .begin()，vi.end()) ;
+//实例化Blob<string>及其接受两个list<const char*>: :iterator参数的构造函数
+Blob<string> a3 (w.begin()，w.end()) ;
+```
+当我们定义al时，显式地指出编译器应该实例化一个int版本的Blob。构造函数自己的类型参数则通过begin(ia)和end(ia)的类型来推断，结果为int*.因此，al的定义实例化了如下版本:
+```
+Blob<int>: :Blob(int*，int*) ;
+```
+
+控制实例化   
+当模板被使用时才会进行实例化这一特性意味着，相同的实例可能出现在多个对象文件中。当两个或多个独立编译的源文件使用了相同的模板，并提供了相同的模板参数时，每个文件中就都会有该模板的一个实例。在大系统中,在多个文件中实例化相同模板的额外开销可能非常严重。在新标准中，
+我们可以通过显式实例化( explicit instantiation)来避免这种开销。
+```
+extern template declaration;
+//实例化声明
+template declaration;
+//实例化定义
+```
+declaration是一个类或函数声明，其中所有模板参数已被替换为模板实参。
+```
+//实例化声明与定义
+extern template class Blob<string>;
+//声明
+template int compare (const int&, const int&); //定义
+```
+当编译器遇到extern模板声明时，它不会在本文件中生成实例化代码。将一个实例化声明为extern就表示承诺在程序其他位置有该实例化的一个非 extern声明(定义)。对于一个给定的实例化版本，可能有多个extern声明，但必须只有一个定义。
+
+由于编译器在使用一个模板时自动对其实例化,因此extern声明必须出现在任何使用此实例化版本的代码之前:
+```
+// Application.cc .
+//这些模板类型必须在程序其他位置进行实例化
+extern template class Blob<string>; 
+extern” template int compare (const int&, const int&) ;
+Blob<string> sal, sa2; //实例化会出现在其他位置
+// Blob<int>及其接受initializer_ list的构造函数在本文件中实例化
+Blob<int> al = {0,1,2,3,4,5,6, 7,8,9};
+Blob<int> a2(al); //拷贝构造函数在本文件中实例化
+int i = compare(a1[0]， a2[0]); //实例化出现在其他位置
+```
+文件Appl ication.o将包含Blob<int>的实例及其接受initializer_ list 参数的构造函数和拷贝构造函数的实例。而compare<int>函数和Blob<string>类将不在本文件中进行实例化。这些模板的定义必须出现在程序的其他文件中:
+```
+// templateBuild. cc
+//实例化文件必须为每个在其他文件中声明为extern的类型和函数提供一个(非extern)
+//的定义
+template int compare (const int&, const int&) ;
+template class Blob<string>; // 实例化类模板的所有成员
+```
+当编译器遇到一个实例化定义(与声明相对)时，它为其生成代码。因此，文件templateBuild.o将会包含compare的int实例化版本的定义和Blob<string>类的定义。当我们编译此应用程序时，必须将templateBuild.o和Application.o链接到一起。
+
+对每个实例化声明，在程序中某个位置必须有其显式的实例化定义。
+
+实例化定义会实例化所有成员  
+一个类模板的实例化定义会实例化该模板的所有成员，包括内联的成员函数。当编译器遇到一个实例化定义时，它不了解程序使用哪些成员函数。因此，与处理类模板的普通实例化不同，编译器会实例化该类的所有成员。即使我们不使用某个成员，它也会被实例化。因此，我们用来显式实例化一个类模板的类型，必须能用于模板的所有成员。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

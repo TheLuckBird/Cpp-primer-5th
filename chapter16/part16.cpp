@@ -70,6 +70,24 @@ template <typename M,size_t N> void print(const M (&a)[N])
     cout << endl;
 }
 
+template <typename T> void print(const T &t)
+{
+    for(auto i=t.begin();i!=t.end();++i)
+        cout << *i << "-";
+    cout << endl;
+}
+
+// template<typename T> class Debugdelete
+// {
+// public:
+//     Debugdelete() = default;
+//     Debugdelete(T v){*p=v;}
+//     void operator() () const {  cout << "删除指针" << endl;delete p;}
+//     void print(){cout << p << " " << *p << endl;} 
+// private:
+//     T *p;
+// };
+
 int main(int argc, char const *argv[])
 {
     // int i=1,j=4;
@@ -115,6 +133,14 @@ int main(int argc, char const *argv[])
     // int a = 10;
     // cout << (*(&a)) << endl;
     // cout << *a << endl;
+
+    // cout << 1 + 'A' << endl;
+
+    // vector<int> ivec = {1,5,7,0};
+    // print(ivec);
+
+    // Debugdelete<int> d(2);
+    // d.print();
 
     return 0;
 }
