@@ -16,7 +16,7 @@ public:
     size_t getItemIndex(T);//按元素取位置
     T getItem(size_t);//按位置取元素
     void insert(size_t,T);
-    void deleteItem(T);
+    // void deleteItem(T);
     ~Sequence_list(){delete [] data;}
 
 private:
@@ -71,12 +71,8 @@ template <typename T> void Sequence_list<T>::insert(size_t p,T v)
     
 }
 
-template <typename T> void Sequence_list<T>::deleteItem(T v)
-{
-    size_t c = 0;//v出现的次数
-    size_t gap = 0;
-    for(size_t i=0;i!=length;++i)
-        if(data[i] == v) ++gap,++c;
-        else data[i-gap] = data[i],gap=0;
-    length = length -c + 1;
-}
+// template <typename T> void Sequence_list<T>::deleteItem(T v)
+// {
+//     if(p < 0 || p>= length) throw runtime_error("越界");
+    
+// }
