@@ -10,7 +10,7 @@ template <typename T>
 class Sequence_list
 {
 public:
-    Sequence_list(size_t size):maxsize(size){data = new T[maxsize];};// T data[maxsize];}
+    Sequence_list(size_t size):maxsize{size}{data = new T[maxsize];};// T data[maxsize];}
     void init();//初始化线性表
     void show();//打印线性表
     size_t getItemIndex(T);//按元素取位置

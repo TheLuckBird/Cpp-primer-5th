@@ -26,6 +26,22 @@ vector<int> twoSum(vector<int>& nums, int target)
     return {};
 }
 
+void moveZeroes(vector<int>& nums)
+{
+    int count = 0;
+    for(int i = 0 ; i!=nums.size();++i)
+    {
+        if(nums[i] == 0) ++count;
+        else nums[i-count] = nums[i];
+    } 
+
+    while(count)
+    {
+        nums[nums.size()-count] = 0;
+        --count;
+    }
+}
+
 int main(int argc, char const *argv[])
 {
     // vector<int> nums= {2,7,11,15};
@@ -50,6 +66,8 @@ int main(int argc, char const *argv[])
     //     std::cerr << "Key '" << key << "' not found in the map." << std::endl;
     // }
 
-
+    vector<int> nums = {0,1,0,3,12,9,0,8,9,0};
+    moveZeroes(nums);
+    for_each(nums.begin(),nums.end(),[](int v){cout << v << " ";});
     return 0;
 }
