@@ -42,6 +42,39 @@ void moveZeroes(vector<int>& nums)
     }
 }
 
+struct ListNode 
+{
+    int val;
+    ListNode *next;
+    ListNode(int x) : val(x), next(NULL) {}
+};
+
+ListNode *getIntersectionNode(ListNode *headA, ListNode *headB)
+{
+    // ListNode *p = headA;
+    // while (p)
+    // {
+    //     ListNode *q = headB;
+    //     while (q)
+    //     {
+    //         if(p==q) return p;
+    //         q = q->next;
+    //     }
+    //     p = p->next;
+        
+    // }
+    // return NULL;
+
+    ListNode *p = headA;
+    ListNode *q = headB;
+    while (p!=q)
+    {
+        p = p == NULL ? headB : p->next;
+        q = q == NULL ? headA : q->next;
+    }//太精妙了
+    return p;
+}
+
 int main(int argc, char const *argv[])
 {
     // vector<int> nums= {2,7,11,15};
@@ -66,8 +99,25 @@ int main(int argc, char const *argv[])
     //     std::cerr << "Key '" << key << "' not found in the map." << std::endl;
     // }
 
-    vector<int> nums = {0,1,0,3,12,9,0,8,9,0};
-    moveZeroes(nums);
-    for_each(nums.begin(),nums.end(),[](int v){cout << v << " ";});
+    // vector<int> nums = {0,1,0,3,12,9,0,8,9,0};
+    // moveZeroes(nums);
+    // for_each(nums.begin(),nums.end(),[](int v){cout << v << " ";});
+
+    ListNode l1(4);
+    ListNode l2(1);l1.next=&l2;
+    ListNode l3(8);l2.next=&l3;
+    ListNode l4(4);l3.next=&l4;
+    ListNode l5(5);l4.next=&l5;
+
+    ListNode a1(5);
+    ListNode a2(6);a1.next=&a2;
+    ListNode a3(1);a2.next=&a3;
+    a3.next=&l3;
+
+    auto v = getIntersectionNode(&l1,&a1);
+    
+    cout << (v == NULL ? "NULL" : to_string((v->val))) << endl;
+
+
     return 0;
 }
