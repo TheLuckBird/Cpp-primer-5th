@@ -42,37 +42,70 @@ void moveZeroes(vector<int>& nums)
     }
 }
 
-struct ListNode 
-{
+// struct ListNode 
+// {
+//     int val;
+//     ListNode *next;
+//     ListNode(int x) : val(x), next(NULL) {}
+// };
+
+// ListNode *getIntersectionNode(ListNode *headA, ListNode *headB)
+// {
+//     // ListNode *p = headA;
+//     // while (p)
+//     // {
+//     //     ListNode *q = headB;
+//     //     while (q)
+//     //     {
+//     //         if(p==q) return p;
+//     //         q = q->next;
+//     //     }
+//     //     p = p->next;
+        
+//     // }
+//     // return NULL;
+
+//     ListNode *p = headA;
+//     ListNode *q = headB;
+//     while (p!=q)
+//     {
+//         p = p == NULL ? headB : p->next;
+//         q = q == NULL ? headA : q->next;
+//     }//太精妙了
+//     return p;
+// }
+
+struct ListNode {
     int val;
     ListNode *next;
-    ListNode(int x) : val(x), next(NULL) {}
+    ListNode() : val(0), next(nullptr) {}
+    ListNode(int x) : val(x), next(nullptr) {}
+    ListNode(int x, ListNode *next) : val(x), next(next) {}
 };
 
-ListNode *getIntersectionNode(ListNode *headA, ListNode *headB)
-{
-    // ListNode *p = headA;
-    // while (p)
-    // {
-    //     ListNode *q = headB;
-    //     while (q)
-    //     {
-    //         if(p==q) return p;
-    //         q = q->next;
-    //     }
-    //     p = p->next;
-        
-    // }
-    // return NULL;
+ListNode* reverseList(ListNode* head) {
+    if(head==nullptr) return nullptr;
+    ListNode *p = head;
+    ListNode *q = head->next;
+    if(q==nullptr) return p;
+    ListNode *r = q->next;
+    p->next = nullptr;
 
-    ListNode *p = headA;
-    ListNode *q = headB;
-    while (p!=q)
+    if(r==nullptr)
     {
-        p = p == NULL ? headB : p->next;
-        q = q == NULL ? headA : q->next;
-    }//太精妙了
-    return p;
+        q->next = p;
+        return q;
+    }
+     
+    while(r)
+    {
+        q->next = p;
+        p = q;
+        q = r;
+        r = r->next;
+    }
+    q->next = p;
+    return q;  
 }
 
 int main(int argc, char const *argv[])
@@ -109,15 +142,29 @@ int main(int argc, char const *argv[])
     ListNode l4(4);l3.next=&l4;
     ListNode l5(5);l4.next=&l5;
 
-    ListNode a1(5);
-    ListNode a2(6);a1.next=&a2;
-    ListNode a3(1);a2.next=&a3;
-    a3.next=&l3;
+    // ListNode a1(5);
+    // ListNode a2(6);a1.next=&a2;
+    // ListNode a3(1);a2.next=&a3;
+    // a3.next=&l3;
 
-    auto v = getIntersectionNode(&l1,&a1);
+    // auto v = getIntersectionNode(&l1,&a1);
     
-    cout << (v == NULL ? "NULL" : to_string((v->val))) << endl;
+    // cout << (v == NULL ? "NULL" : to_string((v->val))) << endl;
+    // ListNode *v = &l1;
+    // while (v)
+    // {
+    //     cout << v->val << " ";
+    //     v = v->next;
+    // }
+    cout << endl;
 
-
+    auto p = reverseList(&l1);
+    while (p)
+    {
+        cout << p->val << " ";
+        p = p->next;
+    }
+    cout << endl;
+    
     return 0;
 }
