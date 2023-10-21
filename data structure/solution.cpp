@@ -1,4 +1,6 @@
 #include <vector>
+#include <string>
+#include <map>
 #include <iostream>
 #include <algorithm>
 #include <unordered_map>
@@ -108,6 +110,70 @@ ListNode* reverseList(ListNode* head) {
     return q;  
 }
 
+bool isPalindrome(ListNode* head)
+{
+    vector<int> ivec;
+    if(head)
+    {
+        ListNode *curr = head;
+        while (curr) 
+        {
+            ivec.push_back(curr->val);
+            curr = curr->next;
+        }
+
+        for(auto i=ivec.begin(),j = ivec.end()-1;i!=j;++i,--j)
+        {
+            if(*i != *j) return false; 
+        }
+        return true;
+    }
+    else 
+        return false;
+    
+}
+
+// bool hasCycle(ListNode *head)
+// {
+//     ListNode *pre = head;
+//     if(pre == nullptr) return false;
+//     ListNode *curr = head->next;
+//     if(curr == nullptr) return false;
+
+//     while(pre)
+//     {
+//         while(curr)
+//         {
+//             if(curr->next == pre) return true;
+//             curr = curr->next;
+//         }
+//         pre = pre->next;
+//         curr = pre->next;
+//     }
+//     return false;
+// }
+
+bool hasCycle(ListNode *head) {
+    if (head == nullptr || head->next == nullptr) {
+        return false;
+    }
+
+    ListNode *slow = head;
+    ListNode *fast = head;
+
+    while (fast != nullptr && fast->next != nullptr) {
+        slow = slow->next;
+        fast = fast->next->next;
+        
+        if (slow == fast) {
+            return true; // 如果它们相遇，说明链表中有环
+        }
+    }
+
+    return false; // 如果循环结束，没有找到环
+}
+
+
 int main(int argc, char const *argv[])
 {
     // vector<int> nums= {2,7,11,15};
@@ -139,8 +205,8 @@ int main(int argc, char const *argv[])
     ListNode l1(4);
     ListNode l2(1);l1.next=&l2;
     ListNode l3(8);l2.next=&l3;
-    ListNode l4(4);l3.next=&l4;
-    ListNode l5(5);l4.next=&l5;
+    ListNode l4(1);l3.next=&l4;
+    ListNode l5(4);l4.next=&l2;
 
     // ListNode a1(5);
     // ListNode a2(6);a1.next=&a2;
@@ -156,15 +222,31 @@ int main(int argc, char const *argv[])
     //     cout << v->val << " ";
     //     v = v->next;
     // }
-    cout << endl;
+    // cout << endl;
 
-    auto p = reverseList(&l1);
-    while (p)
-    {
-        cout << p->val << " ";
-        p = p->next;
-    }
-    cout << endl;
+    // auto p = reverseList(&l1);
+    // while (p)
+    // {
+    //     cout << p->val << " ";
+    //     p = p->next;
+    // }
+    // cout << endl;
+
+    // cout << isPalindrome(&l1) << endl;
+
+    // ListNode l6(10);l6.next = &l2;
+    cout << hasCycle(&l1) << endl;
+
+    // ListNode *v = &l1;
+    // while (v)
+    // {
+    //     cout << v->val << " ";
+    //     v = v->next;
+    // }
+    // cout << endl;
+    
+
+
     
     return 0;
 }
