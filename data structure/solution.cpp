@@ -7,6 +7,8 @@
 
 using namespace std;
 
+
+
 // vector<int> twoSum(vector<int>& nums, int target)
 // {
 //     vector<int> output(2);
@@ -84,6 +86,16 @@ struct ListNode {
     ListNode(int x) : val(x), next(nullptr) {}
     ListNode(int x, ListNode *next) : val(x), next(next) {}
 };
+
+void print_list(ListNode *p)
+{
+    while(p)
+    {
+        cout << p->val <<" ";
+        p = p->next;
+    }
+    cout << endl;
+}
 
 ListNode* reverseList(ListNode* head) {
     if(head==nullptr) return nullptr;
@@ -173,6 +185,63 @@ bool hasCycle(ListNode *head) {
     return false; // 如果循环结束，没有找到环
 }
 
+ListNode* mergeTwoLists(ListNode* list1, ListNode* list2)
+{
+    ListNode head;
+    ListNode *curr = &head;
+    ListNode *p = list1;
+    ListNode *q = list2;
+
+    while(p && q)
+    {
+        if(p->val < q->val)
+        {
+            curr->next = p;
+            curr = p;
+            p = p->next;
+        } 
+        else 
+        {
+            curr->next = q;
+            curr = q;
+            q = q->next;
+        }
+        // curr = curr->next;
+    }
+
+    if(p) curr->next = p;
+    if(q) curr->next = q;
+
+    return head.next;
+}
+
+// ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
+//     ListNode dummy(0); // 创建一个哨兵节点以简化代码
+//     ListNode* curr = &dummy; // 用于遍历新链表
+
+//     ListNode* p = list1;
+//     ListNode* q = list2;
+
+//     while (p && q) {
+//         if (p->val < q->val) {
+//             curr->next = p;
+//             p = p->next;
+//         } else {
+//             curr->next = q;
+//             q = q->next;
+//         }
+//         curr = curr->next;
+//     }
+
+//     if (p) {
+//         curr->next = p;
+//     } else {
+//         curr->next = q;
+//     }
+
+//     return dummy.next;
+// }
+
 
 int main(int argc, char const *argv[])
 {
@@ -203,14 +272,14 @@ int main(int argc, char const *argv[])
     // for_each(nums.begin(),nums.end(),[](int v){cout << v << " ";});
 
     ListNode l1(4);
-    ListNode l2(1);l1.next=&l2;
+    ListNode l2(6);l1.next=&l2;
     ListNode l3(8);l2.next=&l3;
-    ListNode l4(1);l3.next=&l4;
-    ListNode l5(4);l4.next=&l2;
+    ListNode l4(10);l3.next=&l4;
+    ListNode l5(40);
 
-    // ListNode a1(5);
-    // ListNode a2(6);a1.next=&a2;
-    // ListNode a3(1);a2.next=&a3;
+    ListNode a1(5);
+    ListNode a2(60);a1.next=&a2;
+    ListNode a3(100);a2.next=&a3;
     // a3.next=&l3;
 
     // auto v = getIntersectionNode(&l1,&a1);
@@ -235,7 +304,7 @@ int main(int argc, char const *argv[])
     // cout << isPalindrome(&l1) << endl;
 
     // ListNode l6(10);l6.next = &l2;
-    cout << hasCycle(&l1) << endl;
+    // cout << hasCycle(&l1) << endl;
 
     // ListNode *v = &l1;
     // while (v)
@@ -244,9 +313,13 @@ int main(int argc, char const *argv[])
     //     v = v->next;
     // }
     // cout << endl;
-    
 
+    print_list(&l1); 
+    print_list(&a1); 
+    auto iter = mergeTwoLists(&l1,&a1);
+    print_list(iter);
 
+    // cout << (nullptr && nullptr) << endl;
     
     return 0;
 }
