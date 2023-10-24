@@ -2,6 +2,7 @@
 #include "List.h"
 #include "Stack.h"
 #include "StackArray.h"
+#include "QueueArray.h"
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -150,7 +151,16 @@ int main(int argc, char const *argv[])
     // std::cout << "Infix Expression: " << infixExpression << std::endl;
     // std::cout << "Postfix Expression: " << postfixExpression << std::endl;
 
-    cout << mid2post("1 + 2 * 3 + ( 4 * 5 + 6 ) * 7 + 10 / 100") << endl;
-    cout <<postfix(mid2post("1 + 2 * 3 + ( 4 * 5 + 6 ) * 7 + 10 / 100")) << endl;
+    // cout << mid2post("1 + 2 * 3 + ( 4 * 5 + 6 ) * 7 + 10 / 100") << endl;
+    // cout <<postfix(mid2post("1 + 2 * 3 + ( 4 * 5 + 6 ) * 7 + 10 / 100")) << endl;
+
+    QueueArray q(10);
+    cout << q.empty() << endl;
+    q.enqueue(1);
+    q.enqueue(3);
+    cout << q.empty() << endl;
+    cout << q.dequeue() << endl;
+    cout << q.dequeue() << endl;
+    cout << q.empty() << endl;
 
 }

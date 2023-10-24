@@ -4,6 +4,7 @@
 #include <iostream>
 #include <algorithm>
 #include <unordered_map>
+#include <stack>
 
 using namespace std;
 
@@ -242,6 +243,28 @@ ListNode* mergeTwoLists(ListNode* list1, ListNode* list2)
 //     return dummy.next;
 // }
 
+bool isValid(string s)
+{
+    stack<char> op;
+    // if(s.size() % 2) return false;
+    for(int i = 0; i != s.size();++i)
+    {
+        if(op.empty()) op.push(s[i]);
+        else
+        {
+            if(s[i] == '{' || s[i] == '[' || s[i] == '(')
+            {
+                op.push(s[i]);
+            }
+            else if(s[i] == '}' && op.top() == '{') op.pop();
+            else if(s[i] == ']' && op.top() == '[') op.pop();
+            else if(s[i] == ')' && op.top() == '(') op.pop();
+            else return false;
+        }
+         
+    }
+    return op.empty();
+}
 
 int main(int argc, char const *argv[])
 {
@@ -271,15 +294,15 @@ int main(int argc, char const *argv[])
     // moveZeroes(nums);
     // for_each(nums.begin(),nums.end(),[](int v){cout << v << " ";});
 
-    ListNode l1(4);
-    ListNode l2(6);l1.next=&l2;
-    ListNode l3(8);l2.next=&l3;
-    ListNode l4(10);l3.next=&l4;
-    ListNode l5(40);
+    // ListNode l1(4);
+    // ListNode l2(6);l1.next=&l2;
+    // ListNode l3(8);l2.next=&l3;
+    // ListNode l4(10);l3.next=&l4;
+    // ListNode l5(40);
 
-    ListNode a1(5);
-    ListNode a2(60);a1.next=&a2;
-    ListNode a3(100);a2.next=&a3;
+    // ListNode a1(5);
+    // ListNode a2(60);a1.next=&a2;
+    // ListNode a3(100);a2.next=&a3;
     // a3.next=&l3;
 
     // auto v = getIntersectionNode(&l1,&a1);
@@ -314,12 +337,19 @@ int main(int argc, char const *argv[])
     // }
     // cout << endl;
 
-    print_list(&l1); 
-    print_list(&a1); 
-    auto iter = mergeTwoLists(&l1,&a1);
-    print_list(iter);
+    // print_list(&l1); 
+    // print_list(&a1); 
+    // auto iter = mergeTwoLists(&l1,&a1);
+    // print_list(iter);
 
     // cout << (nullptr && nullptr) << endl;
+
+    cout << isValid("()") << endl; 
+    cout << isValid("(){}[]") << endl; 
+    cout << isValid("(})") << endl; 
+    cout << isValid("(]])") << endl; 
+
+
     
     return 0;
 }
