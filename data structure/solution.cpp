@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
 #include <iostream>
 #include <algorithm>
 #include <unordered_map>
@@ -266,6 +267,19 @@ bool isValid(string s)
     return op.empty();
 }
 
+int singleNumber(vector<int>& nums)
+{
+    set<int> Unique;
+    for(auto p:nums)
+    {
+        if(Unique.find(p) == Unique.end()) 
+            Unique.insert(p);
+        else
+            Unique.erase(p);
+    }
+    return *Unique.begin();
+}
+
 int main(int argc, char const *argv[])
 {
     // vector<int> nums= {2,7,11,15};
@@ -344,12 +358,13 @@ int main(int argc, char const *argv[])
 
     // cout << (nullptr && nullptr) << endl;
 
-    cout << isValid("()") << endl; 
-    cout << isValid("(){}[]") << endl; 
-    cout << isValid("(})") << endl; 
-    cout << isValid("(]])") << endl; 
+    // cout << isValid("()") << endl; 
+    // cout << isValid("(){}[]") << endl; 
+    // cout << isValid("(})") << endl; 
+    // cout << isValid("(]])") << endl; 
 
-
+    vector<int> ivec = {9};
+    cout << singleNumber(ivec) << endl;
     
     return 0;
 }
