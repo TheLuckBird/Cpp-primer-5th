@@ -280,6 +280,80 @@ int singleNumber(vector<int>& nums)
     return *Unique.begin();
 }
 
+struct TreeNode
+{
+    int val;
+    TreeNode *left;
+    TreeNode *right;
+
+    TreeNode():val(0),left(nullptr),right(nullptr){}
+    TreeNode(int x):val(x),left(nullptr),right(nullptr){}
+    TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right){}
+};
+
+void inorder(TreeNode *root,vector<int> &ret)
+{
+    if(root == nullptr) return;
+    inorder(root->left,ret);
+    ret.push_back(root->val);
+    inorder(root->right,ret);
+}
+
+vector<int> inorderTraversal(TreeNode* root)
+{
+    vector<int> ret;
+    inorder(root,ret);
+    return ret;
+}
+
+// TreeNode* invertTree(TreeNode* root)
+// {
+//     if(root == nullptr) return nullptr;
+//     invertTree(root->left);
+//     invertTree(root->right);
+//     int temp = (root->left)->val;
+//     (root->left)->val = (root->right)->val;;
+//     (root->right)->val = temp;
+//     return root;
+// }
+
+// bool isSymmetric(TreeNode* root)
+// {
+//     if(root == nullptr) return true;
+//     bool l = isSymmetric(root->left);
+//     bool r = isSymmetric(root->right);
+
+//     if (root->left == nullptr && root->right == nullptr) {
+//     return true; // 左右子树都为空，对称
+//     }
+    
+//     if (root->left == nullptr || root->right == nullptr) {
+//         return false; // 左右子树一个为空一个不为空，不对称
+//     }
+
+//     return ((root->left)->val == (root->right)->val) && l && r;
+// }
+
+bool isMirror(TreeNode* left, TreeNode* right) {
+    if (left == nullptr && right == nullptr) {
+        return true; // 左右子树都为空，对称
+    }
+    
+    if (left == nullptr || right == nullptr) {
+        return false; // 左右子树一个为空一个不为空，不对称
+    }
+    
+    return (left->val == right->val) && isMirror(left->left, right->right) && isMirror(left->right, right->left);
+}
+
+bool isSymmetric(TreeNode* root) {
+    if (root == nullptr) {
+        return true; // 空树是对称的
+    }
+    
+    return isMirror(root->left, root->right);
+}
+
 int main(int argc, char const *argv[])
 {
     // vector<int> nums= {2,7,11,15};
@@ -363,8 +437,21 @@ int main(int argc, char const *argv[])
     // cout << isValid("(})") << endl; 
     // cout << isValid("(]])") << endl; 
 
-    vector<int> ivec = {9};
-    cout << singleNumber(ivec) << endl;
+    // vector<int> ivec = {9};
+    // cout << singleNumber(ivec) << endl;
+
     
+    TreeNode *p1 = new TreeNode(2);
+    TreeNode *p2 = new TreeNode(2);
+    TreeNode *p3 = new TreeNode(2);
+    TreeNode *p4 = new TreeNode(2);
+    TreeNode *p5 = new TreeNode(1,p1,p2);
+    TreeNode *p6 = new TreeNode(1,p3,p4);
+    TreeNode *p7 = new TreeNode(9,p5,p6);
+
+    // vector<int> ivec = inorderTraversal(p3);
+    // for_each(ivec.begin(),ivec.end(),[](int val){cout << val << " ";});
+    
+    cout << isSymmetric(p7) << endl;
     return 0;
 }
