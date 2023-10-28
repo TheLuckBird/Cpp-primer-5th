@@ -354,6 +354,7 @@ bool isSymmetric(TreeNode* root) {
     return isMirror(root->left, root->right);
 }
 
+
 int main(int argc, char const *argv[])
 {
     // vector<int> nums= {2,7,11,15};
@@ -441,17 +442,47 @@ int main(int argc, char const *argv[])
     // cout << singleNumber(ivec) << endl;
 
     
-    TreeNode *p1 = new TreeNode(2);
-    TreeNode *p2 = new TreeNode(2);
-    TreeNode *p3 = new TreeNode(2);
-    TreeNode *p4 = new TreeNode(2);
-    TreeNode *p5 = new TreeNode(1,p1,p2);
-    TreeNode *p6 = new TreeNode(1,p3,p4);
-    TreeNode *p7 = new TreeNode(9,p5,p6);
+    // TreeNode *p1 = new TreeNode(2);
+    // TreeNode *p2 = new TreeNode(2);
+    // TreeNode *p3 = new TreeNode(2);
+    // TreeNode *p4 = new TreeNode(2);
+    // TreeNode *p5 = new TreeNode(1,p1,p2);
+    // TreeNode *p6 = new TreeNode(1,p3,p4);
+    // TreeNode *p7 = new TreeNode(9,p5,p6);
+
+    // TreeNode a(3);
+    // TreeNode b(4);
+    // a.left = &b;
+
+    // p1->left = p2;
 
     // vector<int> ivec = inorderTraversal(p3);
     // for_each(ivec.begin(),ivec.end(),[](int val){cout << val << " ";});
     
-    cout << isSymmetric(p7) << endl;
+    // cout << isSymmetric(p7) << endl;
+
+    // TreeNode *p1 = new TreeNode(1);
+    // TreeNode *p2 = new TreeNode(1,p1,nullptr);
+    // TreeNode *p3 = new TreeNode(1);
+    // TreeNode *p4 = new TreeNode(1,p2,nullptr);
+    // TreeNode *p5 = new TreeNode(1,p4,p3);
+
+    // TreeNode *p1 = new TreeNode(1);
+    // TreeNode *p2 = new TreeNode(1,p1,nullptr);
+    // TreeNode *p3 = new TreeNode(1,p2,nullptr);
+    // TreeNode *p4 = new TreeNode(1,p3,nullptr);
+    // TreeNode *p5 = new TreeNode(1,p4,nullptr);
+    // TreeNode *p6 = new TreeNode(1,p5,nullptr);
+
+    // cout << diameterOfBinaryTree(p6) << endl;
+    
+    TreeNode *p4 = new TreeNode(4);
+    TreeNode *p5 = new TreeNode(5);
+    TreeNode *p2 = new TreeNode(2,p4,p5);
+    TreeNode *p3 = new TreeNode(3);
+    TreeNode *p1 = new TreeNode(1,p2,p3);
+
+    cout << diameterOfBinaryTree(p1) << endl;
+
     return 0;
 }
