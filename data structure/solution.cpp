@@ -354,6 +354,13 @@ bool isSymmetric(TreeNode* root) {
     return isMirror(root->left, root->right);
 }
 
+// bool isSymmetric(TreeNode *root)
+// {
+//     if(root == nullptr) return true;
+//     if(root->left || root->right) return false;
+//     if(root->left->val == root->right->val) return true;
+//     return isSymmetric(root->left) && isSymmetric(root->right);
+// }
 
 int main(int argc, char const *argv[])
 {
@@ -476,13 +483,13 @@ int main(int argc, char const *argv[])
 
     // cout << diameterOfBinaryTree(p6) << endl;
     
-    TreeNode *p4 = new TreeNode(4);
-    TreeNode *p5 = new TreeNode(5);
-    TreeNode *p2 = new TreeNode(2,p4,p5);
-    TreeNode *p3 = new TreeNode(3);
-    TreeNode *p1 = new TreeNode(1,p2,p3);
+    // TreeNode *p4 = new TreeNode(4);
+    // TreeNode *p5 = new TreeNode(5);
+    // TreeNode *p2 = new TreeNode(2,p4,p5);
+    // TreeNode *p3 = new TreeNode(3);
+    // TreeNode *p1 = new TreeNode(1,p2,p3);
 
-    cout << diameterOfBinaryTree(p1) << endl;
+    // cout << diameterOfBinaryTree(p1) << endl;
 
     return 0;
 }

@@ -24,9 +24,11 @@ void printTree(TreeNode* root) {
 template<typename T> 
 class BinaryNode
 {
+public:
     T element;
     BinaryNode *left;
     BinaryNode *right;
     BinaryNode(T data):element(data),left(nullptr),right(nullptr){}
+    BinaryNode(T data,BinaryNode *left,BinaryNode *right):element(data),left(left),right(right){}
 };
 
