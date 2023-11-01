@@ -128,6 +128,33 @@ vector<int> inordertraversaliter(BinaryNode<int> *root)
 
 }
 
+//后序遍历，迭代实现(反转法)
+vector<int> postordertraversaliter(BinaryNode<int> *root)
+{
+    stack<BinaryNode<int> *> Stack;
+    vector<int> vec;
+    if(root ==nullptr) return vec;
+    BinaryNode<int> *p = root;
+
+    while(!Stack.empty() || p)
+    {
+        while(p != nullptr)
+        {
+            vec.push_back(p->element);
+            Stack.push(p);
+            p = p->right;
+        }
+
+        p = Stack.top();
+        Stack.pop();
+        p = p->left;
+
+    }
+    reverse(vec.begin(),vec.end());
+    return vec;
+
+}
+
 int main(int argc, char const *argv[])
 {
     // // 创建树节点
@@ -162,9 +189,11 @@ int main(int argc, char const *argv[])
 
     // tree.printTree();
 
+    BinaryNode<int> *b9 = new BinaryNode<int>(9);
+    BinaryNode<int> *b8 = new BinaryNode<int>(8);
     BinaryNode<int> *b6 = new BinaryNode<int>(6);
-    BinaryNode<int> *b7 = new BinaryNode<int>(7);
-    BinaryNode<int> *b1 = new BinaryNode<int>(5,nullptr,b7);
+    BinaryNode<int> *b7 = new BinaryNode<int>(7,nullptr,b9);
+    BinaryNode<int> *b1 = new BinaryNode<int>(5,b8,b7);
     BinaryNode<int> *b2 = new BinaryNode<int>(4,nullptr,b1);
     BinaryNode<int> *b3 = new BinaryNode<int>(3,nullptr,b6);
     BinaryNode<int> *b4 = new BinaryNode<int>(2,b2,nullptr);
@@ -200,6 +229,11 @@ int main(int argc, char const *argv[])
     cout << "中序遍历，迭代实现"  << endl;
     for(auto p:inordertraversaliter(b5))
         cout << p << " ";
+    cout << endl;
+
+    cout << "后序遍历，迭代实现" << endl;
+    for(auto p:postordertraversaliter(b5))
+        cout << p <<" ";
     cout << endl;
 
     return 0;
