@@ -1,0 +1,10 @@
+release/main.o
+release/mainwindow.o
+release/worldlistwea.o
+release/asiawea.o
+release/citywithtemp.o
+release/qrc_res.o
+release/moc_mainwindow.o
+release/moc_worldlistwea.o
+release/moc_asiawea.o
+release/moc_citywithtemp.o

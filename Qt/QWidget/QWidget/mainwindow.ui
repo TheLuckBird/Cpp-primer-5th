@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>737</width>
+    <height>538</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QPushButton" name="modaldialog">
+      <property name="text">
+       <string>显示模态对话框</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QPushButton" name="msgbox">
+        <property name="text">
+         <string>msgbox</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="filebox">
+        <property name="text">
+         <string>filebox</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="processbt">
+        <property name="text">
+         <string>process</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QPushButton" name="movebt">
+      <property name="text">
+       <string>移动窗口</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="infobt">
+      <property name="text">
+       <string>窗口信息</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="identifybt">
+      <property name="text">
+       <string>修改窗口</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>737</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>文件</string>
+    </property>
+    <addaction name="open_action"/>
+    <addaction name="separator"/>
+   </widget>
+   <addaction name="menu"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>50</width>
+     <height>50</height>
+    </size>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>LeftToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="open_action"/>
+  </widget>
+  <widget class="QDockWidget" name="dockWidget">
+   <property name="windowTitle">
+    <string>浮动窗口</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents"/>
+  </widget>
+  <action name="open_action">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/pic.jpg</normaloff>:/pic.jpg</iconset>
+   </property>
+   <property name="text">
+    <string>打开</string>
+   </property>
+   <property name="toolTip">
+    <string>打开文件</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="res.qrc"/>
+ </resources>
+ <connections/>
+</ui>

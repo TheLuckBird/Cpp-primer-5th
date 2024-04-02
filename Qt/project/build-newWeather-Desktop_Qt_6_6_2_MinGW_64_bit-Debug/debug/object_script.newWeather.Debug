@@ -1,0 +1,10 @@
+debug/main.o
+debug/mainwindow.o
+debug/worldlistwea.o
+debug/asiawea.o
+debug/citywithtemp.o
+debug/qrc_res.o
+debug/moc_mainwindow.o
+debug/moc_worldlistwea.o
+debug/moc_asiawea.o
+debug/moc_citywithtemp.o
